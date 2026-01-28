@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.96848433155-gvt07vhuhcs1p8ampparrofbamhghj8g</string>
+			</array>
+		</dict>
+	</array>
+	<key>CF_IMAGES_ACCOUNT_HASH</key>
+	<string>bh7zSZiTTc0igci1WPjT5w</string>
+	<key>GIDClientID</key>
+	<string>96848433155-gvt07vhuhcs1p8ampparrofbamhghj8g.apps.googleusercontent.com</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>

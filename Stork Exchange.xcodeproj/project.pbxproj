@@ -1,0 +1,674 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5D3545D32E81CE5A00D986D1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3545CF2E81CE5A00D986D1 /* AppDelegate.swift */; };
+		5D3C2E422E4A534600E65B24 /* InstantSearch in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3C2E412E4A534600E65B24 /* InstantSearch */; };
+		5D3C2E442E4A534600E65B24 /* InstantSearchCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3C2E432E4A534600E65B24 /* InstantSearchCore */; };
+		5D3C2E462E4A534600E65B24 /* InstantSearchInsights in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3C2E452E4A534600E65B24 /* InstantSearchInsights */; };
+		5D3C2E482E4A534600E65B24 /* InstantSearchSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3C2E472E4A534600E65B24 /* InstantSearchSwiftUI */; };
+		5D5A7AD42EB1B37C007D6431 /* Stripe in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7AD32EB1B37C007D6431 /* Stripe */; };
+		5D5A7AD62EB1B37C007D6431 /* StripeApplePay in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7AD52EB1B37C007D6431 /* StripeApplePay */; };
+		5D5A7AD82EB1B37C007D6431 /* StripeCardScan in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7AD72EB1B37C007D6431 /* StripeCardScan */; };
+		5D5A7ADA2EB1B37C007D6431 /* StripeIdentity in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7AD92EB1B37C007D6431 /* StripeIdentity */; };
+		5D5A7ADC2EB1B37C007D6431 /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7ADB2EB1B37C007D6431 /* StripePaymentSheet */; };
+		5D5A7ADE2EB1B37C007D6431 /* StripePayments in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7ADD2EB1B37C007D6431 /* StripePayments */; };
+		5D5A7AE02EB1B37C007D6431 /* StripePaymentsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5A7ADF2EB1B37C007D6431 /* StripePaymentsUI */; };
+		5D6271F12E2D8EE100FB2D91 /* VestiviaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D6271EA2E2D8EE100FB2D91 /* VestiviaApp.swift */; };
+		5D6271F72E2D8EE100FB2D91 /* HomeFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D6271DC2E2D8EE100FB2D91 /* HomeFeedView.swift */; };
+		5D6271FB2E2D8EE100FB2D91 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D6271E82E2D8EE100FB2D91 /* Assets.xcassets */; };
+		5D87DAA22E42F9840088E6E6 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAA12E42F9840088E6E6 /* FirebaseAnalytics */; };
+		5D87DAA42E42F9840088E6E6 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAA32E42F9840088E6E6 /* FirebaseAnalyticsCore */; };
+		5D87DAA62E42F9840088E6E6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAA52E42F9840088E6E6 /* FirebaseAuth */; };
+		5D87DAA82E42F9840088E6E6 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAA72E42F9840088E6E6 /* FirebaseCore */; };
+		5D87DAAA2E42F9840088E6E6 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAA92E42F9840088E6E6 /* FirebaseCrashlytics */; };
+		5D87DAAC2E42F9840088E6E6 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAAB2E42F9840088E6E6 /* FirebaseFirestore */; };
+		5D87DAAE2E42F9840088E6E6 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAAD2E42F9840088E6E6 /* FirebaseMessaging */; };
+		5D87DAB02E42F9840088E6E6 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 5D87DAAF2E42F9840088E6E6 /* FirebaseStorage */; };
+		5D885AE72E58E763002118AF /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5D885AE62E58E763002118AF /* FirebaseFunctions */; };
+		5D885AE92E58EA72002118AF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5D885AE82E58EA72002118AF /* GoogleService-Info.plist */; };
+		5D885AEC2E58EBD9002118AF /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 5D885AEB2E58EBD9002118AF /* GoogleSignIn */; };
+		5D885AEE2E58EBD9002118AF /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5D885AED2E58EBD9002118AF /* GoogleSignInSwift */; };
+		5D8A4CC32E2EEF9C0040689C /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8A4CC22E2EEF9C0040689C /* MainTabView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		5D3545CF2E81CE5A00D986D1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		5D35463D2E81CE7000D986D1 /* ExchangeDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExchangeDebug.entitlements; sourceTree = "<group>"; };
+		5D398C4A2E2DCC3600AB6043 /* Porch Pick.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Porch Pick.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D5A7AD12EB1AEA0007D6431 /* Exchange.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Exchange.entitlements; sourceTree = "<group>"; };
+		5D6271DC2E2D8EE100FB2D91 /* HomeFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeedView.swift; sourceTree = "<group>"; };
+		5D6271E82E2D8EE100FB2D91 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5D6271EA2E2D8EE100FB2D91 /* VestiviaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VestiviaApp.swift; sourceTree = "<group>"; };
+		5D885AE82E58EA72002118AF /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		5D885AEF2E58F2AB002118AF /* Exchange-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Exchange-Info.plist"; sourceTree = "<group>"; };
+		5D8A4CC22E2EEF9C0040689C /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		5D0472772E8F22740022D73D /* My Porch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "My Porch";
+			sourceTree = "<group>";
+		};
+		5D1E16492E7CB2E800937BCC /* Notifications */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		5D3C2E762E57CA0E00E65B24 /* Messaging */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Messaging;
+			sourceTree = "<group>";
+		};
+		5D5A7AE12EB53167007D6431 /* Checkout */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Checkout;
+			sourceTree = "<group>";
+		};
+		5D6272972E2D95BE00FB2D91 /* Session Manager */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Session Manager";
+			sourceTree = "<group>";
+		};
+		5D62729B2E2D981C00FB2D91 /* Item for sale */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Item for sale";
+			sourceTree = "<group>";
+		};
+		5D87DAB92E43BCEC0088E6E6 /* AlgoliaSearch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AlgoliaSearch;
+			sourceTree = "<group>";
+		};
+		5D8A4C7B2E2E2F460040689C /* Bottom Tab  */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Bottom Tab ";
+			sourceTree = "<group>";
+		};
+		5D8A4C7F2E2E2F480040689C /* App Color Scheme */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "App Color Scheme";
+			sourceTree = "<group>";
+		};
+		5DD26E822E5F6780003E005B /* AI Pattern Match */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "AI Pattern Match";
+			sourceTree = "<group>";
+		};
+		5DD353702E3EAA31002689BE /* Auth & Login */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Auth & Login";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5DDAA6B62E2D86C0001C6B53 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D5A7AD82EB1B37C007D6431 /* StripeCardScan in Frameworks */,
+				5D885AEE2E58EBD9002118AF /* GoogleSignInSwift in Frameworks */,
+				5D5A7ADA2EB1B37C007D6431 /* StripeIdentity in Frameworks */,
+				5D87DAAE2E42F9840088E6E6 /* FirebaseMessaging in Frameworks */,
+				5D5A7ADC2EB1B37C007D6431 /* StripePaymentSheet in Frameworks */,
+				5D87DAA22E42F9840088E6E6 /* FirebaseAnalytics in Frameworks */,
+				5D87DAB02E42F9840088E6E6 /* FirebaseStorage in Frameworks */,
+				5D87DAA82E42F9840088E6E6 /* FirebaseCore in Frameworks */,
+				5D5A7AD62EB1B37C007D6431 /* StripeApplePay in Frameworks */,
+				5D87DAA42E42F9840088E6E6 /* FirebaseAnalyticsCore in Frameworks */,
+				5D87DAAA2E42F9840088E6E6 /* FirebaseCrashlytics in Frameworks */,
+				5D3C2E482E4A534600E65B24 /* InstantSearchSwiftUI in Frameworks */,
+				5D5A7ADE2EB1B37C007D6431 /* StripePayments in Frameworks */,
+				5D87DAA62E42F9840088E6E6 /* FirebaseAuth in Frameworks */,
+				5D5A7AE02EB1B37C007D6431 /* StripePaymentsUI in Frameworks */,
+				5D3C2E462E4A534600E65B24 /* InstantSearchInsights in Frameworks */,
+				5D885AE72E58E763002118AF /* FirebaseFunctions in Frameworks */,
+				5D3C2E442E4A534600E65B24 /* InstantSearchCore in Frameworks */,
+				5D3C2E422E4A534600E65B24 /* InstantSearch in Frameworks */,
+				5D5A7AD42EB1B37C007D6431 /* Stripe in Frameworks */,
+				5D87DAAC2E42F9840088E6E6 /* FirebaseFirestore in Frameworks */,
+				5D885AEC2E58EBD9002118AF /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5D6271DE2E2D8EE100FB2D91 /* Home View */ = {
+			isa = PBXGroup;
+			children = (
+				5D8A4CC22E2EEF9C0040689C /* MainTabView.swift */,
+				5D6271DC2E2D8EE100FB2D91 /* HomeFeedView.swift */,
+			);
+			path = "Home View";
+			sourceTree = "<group>";
+		};
+		5D6271EB2E2D8EE100FB2D91 /* Vestivia */ = {
+			isa = PBXGroup;
+			children = (
+				5D5A7AE12EB53167007D6431 /* Checkout */,
+				5D0472772E8F22740022D73D /* My Porch */,
+				5D1E16492E7CB2E800937BCC /* Notifications */,
+				5DD26E822E5F6780003E005B /* AI Pattern Match */,
+				5D3C2E762E57CA0E00E65B24 /* Messaging */,
+				5D87DAB92E43BCEC0088E6E6 /* AlgoliaSearch */,
+				5DD353702E3EAA31002689BE /* Auth & Login */,
+				5D62729B2E2D981C00FB2D91 /* Item for sale */,
+				5D6272972E2D95BE00FB2D91 /* Session Manager */,
+				5D8A4C7F2E2E2F480040689C /* App Color Scheme */,
+				5D8A4C7B2E2E2F460040689C /* Bottom Tab  */,
+				5D6271DE2E2D8EE100FB2D91 /* Home View */,
+				5D6271EA2E2D8EE100FB2D91 /* VestiviaApp.swift */,
+				5D3545CF2E81CE5A00D986D1 /* AppDelegate.swift */,
+			);
+			path = Vestivia;
+			sourceTree = "<group>";
+		};
+		5DDAA6B02E2D86C0001C6B53 = {
+			isa = PBXGroup;
+			children = (
+				5D5A7AD12EB1AEA0007D6431 /* Exchange.entitlements */,
+				5D35463D2E81CE7000D986D1 /* ExchangeDebug.entitlements */,
+				5D885AEF2E58F2AB002118AF /* Exchange-Info.plist */,
+				5D6271EB2E2D8EE100FB2D91 /* Vestivia */,
+				5D398C4A2E2DCC3600AB6043 /* Porch Pick.app */,
+				5D6271E82E2D8EE100FB2D91 /* Assets.xcassets */,
+				5D885AE82E58EA72002118AF /* GoogleService-Info.plist */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5DDAA6B82E2D86C0001C6B53 /* Exchange */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5DDAA6C42E2D86C1001C6B53 /* Build configuration list for PBXNativeTarget "Exchange" */;
+			buildPhases = (
+				5DDAA6B52E2D86C0001C6B53 /* Sources */,
+				5DDAA6B62E2D86C0001C6B53 /* Frameworks */,
+				5DDAA6B72E2D86C0001C6B53 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5D0472772E8F22740022D73D /* My Porch */,
+				5D1E16492E7CB2E800937BCC /* Notifications */,
+				5D3C2E762E57CA0E00E65B24 /* Messaging */,
+				5D5A7AE12EB53167007D6431 /* Checkout */,
+				5D6272972E2D95BE00FB2D91 /* Session Manager */,
+				5D62729B2E2D981C00FB2D91 /* Item for sale */,
+				5D87DAB92E43BCEC0088E6E6 /* AlgoliaSearch */,
+				5D8A4C7B2E2E2F460040689C /* Bottom Tab  */,
+				5D8A4C7F2E2E2F480040689C /* App Color Scheme */,
+				5DD26E822E5F6780003E005B /* AI Pattern Match */,
+				5DD353702E3EAA31002689BE /* Auth & Login */,
+			);
+			name = Exchange;
+			packageProductDependencies = (
+				5D87DAA12E42F9840088E6E6 /* FirebaseAnalytics */,
+				5D87DAA32E42F9840088E6E6 /* FirebaseAnalyticsCore */,
+				5D87DAA52E42F9840088E6E6 /* FirebaseAuth */,
+				5D87DAA72E42F9840088E6E6 /* FirebaseCore */,
+				5D87DAA92E42F9840088E6E6 /* FirebaseCrashlytics */,
+				5D87DAAB2E42F9840088E6E6 /* FirebaseFirestore */,
+				5D87DAAD2E42F9840088E6E6 /* FirebaseMessaging */,
+				5D87DAAF2E42F9840088E6E6 /* FirebaseStorage */,
+				5D3C2E412E4A534600E65B24 /* InstantSearch */,
+				5D3C2E432E4A534600E65B24 /* InstantSearchCore */,
+				5D3C2E452E4A534600E65B24 /* InstantSearchInsights */,
+				5D3C2E472E4A534600E65B24 /* InstantSearchSwiftUI */,
+				5D885AE62E58E763002118AF /* FirebaseFunctions */,
+				5D885AEB2E58EBD9002118AF /* GoogleSignIn */,
+				5D885AED2E58EBD9002118AF /* GoogleSignInSwift */,
+				5D5A7AD32EB1B37C007D6431 /* Stripe */,
+				5D5A7AD52EB1B37C007D6431 /* StripeApplePay */,
+				5D5A7AD72EB1B37C007D6431 /* StripeCardScan */,
+				5D5A7AD92EB1B37C007D6431 /* StripeIdentity */,
+				5D5A7ADB2EB1B37C007D6431 /* StripePaymentSheet */,
+				5D5A7ADD2EB1B37C007D6431 /* StripePayments */,
+				5D5A7ADF2EB1B37C007D6431 /* StripePaymentsUI */,
+			);
+			productName = Exchange;
+			productReference = 5D398C4A2E2DCC3600AB6043 /* Porch Pick.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5DDAA6B12E2D86C0001C6B53 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					5DDAA6B82E2D86C0001C6B53 = {
+						CreatedOnToolsVersion = 16.4;
+						LastSwiftMigration = 1640;
+					};
+				};
+			};
+			buildConfigurationList = 5DDAA6B42E2D86C0001C6B53 /* Build configuration list for PBXProject "Stork Exchange" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 5DDAA6B02E2D86C0001C6B53;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */,
+				5D885AEA2E58EBD9002118AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5DDAA6B02E2D86C0001C6B53;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5DDAA6B82E2D86C0001C6B53 /* Exchange */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5DDAA6B72E2D86C0001C6B53 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D6271FB2E2D8EE100FB2D91 /* Assets.xcassets in Resources */,
+				5D885AE92E58EA72002118AF /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5DDAA6B52E2D86C0001C6B53 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D6271F12E2D8EE100FB2D91 /* VestiviaApp.swift in Sources */,
+				5D8A4CC32E2EEF9C0040689C /* MainTabView.swift in Sources */,
+				5D6271F72E2D8EE100FB2D91 /* HomeFeedView.swift in Sources */,
+				5D3545D32E81CE5A00D986D1 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5DDAA6C22E2D86C1001C6B53 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 23P4ZSHG9T;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "Porch Pick";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		5DDAA6C32E2D86C1001C6B53 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 23P4ZSHG9T;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "Porch Pick";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		5DDAA6C52E2D86C1001C6B53 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ExchangeDebug.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 23P4ZSHG9T;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Exchange-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take and edit photos for your listing.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.LoomPair.Market;
+				PRODUCT_NAME = "$(PRODUCT_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Vestivia/Exchange-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5DDAA6C62E2D86C1001C6B53 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Exchange.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 23P4ZSHG9T;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Exchange-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take and edit photos for your listing.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.LoomPair.Market;
+				PRODUCT_NAME = "$(PRODUCT_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Vestivia/Exchange-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5DDAA6B42E2D86C0001C6B53 /* Build configuration list for PBXProject "Stork Exchange" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DDAA6C22E2D86C1001C6B53 /* Debug */,
+				5DDAA6C32E2D86C1001C6B53 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5DDAA6C42E2D86C1001C6B53 /* Build configuration list for PBXNativeTarget "Exchange" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DDAA6C52E2D86C1001C6B53 /* Debug */,
+				5DDAA6C62E2D86C1001C6B53 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/algolia/instantsearch-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.27.0;
+			};
+		};
+		5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stripe/stripe-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.25.0;
+			};
+		};
+		5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.1.0;
+			};
+		};
+		5D885AEA2E58EBD9002118AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5D3C2E412E4A534600E65B24 /* InstantSearch */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */;
+			productName = InstantSearch;
+		};
+		5D3C2E432E4A534600E65B24 /* InstantSearchCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */;
+			productName = InstantSearchCore;
+		};
+		5D3C2E452E4A534600E65B24 /* InstantSearchInsights */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */;
+			productName = InstantSearchInsights;
+		};
+		5D3C2E472E4A534600E65B24 /* InstantSearchSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D3C2E402E4A534600E65B24 /* XCRemoteSwiftPackageReference "instantsearch-ios" */;
+			productName = InstantSearchSwiftUI;
+		};
+		5D5A7AD32EB1B37C007D6431 /* Stripe */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = Stripe;
+		};
+		5D5A7AD52EB1B37C007D6431 /* StripeApplePay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripeApplePay;
+		};
+		5D5A7AD72EB1B37C007D6431 /* StripeCardScan */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripeCardScan;
+		};
+		5D5A7AD92EB1B37C007D6431 /* StripeIdentity */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripeIdentity;
+		};
+		5D5A7ADB2EB1B37C007D6431 /* StripePaymentSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripePaymentSheet;
+		};
+		5D5A7ADD2EB1B37C007D6431 /* StripePayments */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripePayments;
+		};
+		5D5A7ADF2EB1B37C007D6431 /* StripePaymentsUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5A7AD22EB1B37C007D6431 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripePaymentsUI;
+		};
+		5D87DAA12E42F9840088E6E6 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		5D87DAA32E42F9840088E6E6 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		5D87DAA52E42F9840088E6E6 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		5D87DAA72E42F9840088E6E6 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		5D87DAA92E42F9840088E6E6 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		5D87DAAB2E42F9840088E6E6 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		5D87DAAD2E42F9840088E6E6 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		5D87DAAF2E42F9840088E6E6 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		5D885AE62E58E763002118AF /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D87DAA02E42F9840088E6E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		5D885AEB2E58EBD9002118AF /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D885AEA2E58EBD9002118AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		5D885AED2E58EBD9002118AF /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D885AEA2E58EBD9002118AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 5DDAA6B12E2D86C0001C6B53 /* Project object */;
+}

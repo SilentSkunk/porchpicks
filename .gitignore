@@ -1,0 +1,16 @@
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Firebase
+GoogleService-Info.plist
+
+# Secrets / env
+*.env
+
+# SwiftPM
+.build/
+
+# macOS
+.DS_Store

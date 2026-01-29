@@ -2,6 +2,16 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import Stripe from "stripe";
 import * as admin from "firebase-admin";
+import crypto from "crypto";
+
+// Generate deterministic idempotency key to prevent duplicate PaymentIntents
+function generateIdempotencyKey(uid: string, listingId: string, amount: number): string {
+  return crypto
+    .createHash("sha256")
+    .update(`${uid}-${listingId}-${amount}`)
+    .digest("hex")
+    .slice(0, 32);
+}
 
 // Ensure Admin SDK initialized once
 if (!admin.apps.length) admin.initializeApp();
@@ -107,19 +117,25 @@ export const initPaymentSheet = onCall(
         }
       : undefined;
 
+    // Generate idempotency key to prevent duplicate PaymentIntents on retry
+    const idempotencyKey = generateIdempotencyKey(uid, listingId || "checkout", amount as number);
+
     // Create PaymentIntent for the provided amount
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount as number,
-      currency,
-      customer: customerId,
-      automatic_payment_methods: { enabled: true },
-      shipping: shippingParams,
-      metadata: {
-        ...(listingId ? { listingId } : {}),
-        ...(sellerId ? { sellerId } : {}),
-        buyerId, // always include buyer uid
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: amount as number,
+        currency,
+        customer: customerId,
+        automatic_payment_methods: { enabled: true },
+        shipping: shippingParams,
+        metadata: {
+          ...(listingId ? { listingId } : {}),
+          ...(sellerId ? { sellerId } : {}),
+          buyerId, // always include buyer uid
+        },
       },
-    });
+      { idempotencyKey }
+    );
 
     if (!paymentIntent.client_secret) {
       throw new HttpsError("internal", "Failed to create payment intent.");

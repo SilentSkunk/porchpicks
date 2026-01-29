@@ -61,9 +61,11 @@ class FlowControllerManager: ObservableObject {
             if let p = prefill {
                 configuration.defaultBillingDetails.name = p.fullName
                 configuration.defaultBillingDetails.phone = p.phone
-                configuration.defaultBillingDetails.address.city = p.city
-                configuration.defaultBillingDetails.address.country = p.country
                 configuration.defaultBillingDetails.address.line1 = p.address
+                configuration.defaultBillingDetails.address.city = p.city
+                configuration.defaultBillingDetails.address.state = p.state
+                configuration.defaultBillingDetails.address.postalCode = p.postalCode
+                configuration.defaultBillingDetails.address.country = p.country
             }
             
             print("💳 [FlowController] Requesting FlowController with PaymentIntent \(initResult.paymentIntent)")
@@ -183,9 +185,11 @@ extension FlowControllerManager {
         var phone: String?
         var address: String?
         var city: String?
+        var state: String?
+        var postalCode: String?
         var country: String?
     }
-    
+
     struct ShippingAddress {
         let line1: String
         let city: String

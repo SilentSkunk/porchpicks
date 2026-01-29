@@ -245,6 +245,8 @@ struct CartScreen: View {
                             phone: vm.selectedAddress?.phone,
                             address: vm.selectedAddress?.address,
                             city: vm.selectedAddress?.city,
+                            state: vm.selectedAddress?.state,
+                            postalCode: vm.selectedAddress?.zip,
                             country: vm.selectedAddress?.country
                         )
                         vm.paymentSheetManager.startSetupFlow(presentingVC: vc, prefill: prefill)

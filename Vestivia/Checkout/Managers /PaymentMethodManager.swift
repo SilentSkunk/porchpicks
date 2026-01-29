@@ -26,6 +26,8 @@ class PaymentMethodManager: ObservableObject {
         var phone: String?
         var address: String?
         var city: String?
+        var state: String?
+        var postalCode: String?
         var country: String?
     }
 
@@ -66,9 +68,11 @@ class PaymentMethodManager: ObservableObject {
             if let prefill = prefill {
                 configuration.defaultBillingDetails.name = prefill.fullName
                 configuration.defaultBillingDetails.phone = prefill.phone
-                configuration.defaultBillingDetails.address.city = prefill.city
-                configuration.defaultBillingDetails.address.country = prefill.country
                 configuration.defaultBillingDetails.address.line1 = prefill.address
+                configuration.defaultBillingDetails.address.city = prefill.city
+                configuration.defaultBillingDetails.address.state = prefill.state
+                configuration.defaultBillingDetails.address.postalCode = prefill.postalCode
+                configuration.defaultBillingDetails.address.country = prefill.country
             }
 
             self.paymentSheet = PaymentSheet(setupIntentClientSecret: setupIntent,

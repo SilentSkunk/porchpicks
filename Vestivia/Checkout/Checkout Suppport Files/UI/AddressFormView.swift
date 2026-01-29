@@ -22,7 +22,7 @@ struct AddressFormView: View {
     @State private var addressLine: String = ""
     @State private var addressLine2: String = ""
     @State private var city: String = ""
-    @State private var state: String = ""
+    @State private var state: String = "AL"
     @State private var zip: String = ""
     @State private var phone: String = ""
     @State private var makePrimary: Bool = true

@@ -442,18 +442,3 @@ struct ShippoLabel {
     let carrier: String
 }
 
-// ------------------------------------------------------
-// MARK: - UserAddress Compatibility (Shipping)
-// ------------------------------------------------------
-// Temporary shim so Shippo payload can compile until
-// state / zip are added to the canonical UserAddress model.
-
-extension UserAddress {
-    var state: String {
-        ""
-    }
-
-    var zip: String {
-        ""
-    }
-}

@@ -101,15 +101,9 @@ struct AddressFormView: View {
                     // Phone
                     Text("Phone Number")
                         .font(.system(size: 14, weight: .semibold))
-                    
+
                     RoundedField(text: $phone, placeholder: "+1 (555) 555-5555", keyboard: .phonePad)
-                    
-                    // Address
-                    Text("Address")
-                        .font(.system(size: 14, weight: .semibold))
-                    
-                    RoundedField(text: $addressLine, placeholder: "Street, Apt, etc.")
-                    
+
                     // Primary toggle
                     HStack {
                         Text("Save as primary address")
@@ -140,11 +134,14 @@ struct AddressFormView: View {
                 )
                 onSave?(data)
                 if makePrimary {
+                    let combinedAddress = addressLine2.isEmpty ? addressLine : "\(addressLine), \(addressLine2)"
                     let userAddress = UserAddress(
                         id: "main",
                         fullName: fullName,
-                        address: addressLine,
+                        address: combinedAddress,
                         city: city,
+                        state: state,
+                        zip: zip,
                         country: "United States",
                         phone: phone,
                         isPrimary: true

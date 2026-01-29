@@ -19,19 +19,23 @@ import FirebaseAuth
 // MARK: - Address Model used across app
 struct UserAddress: Identifiable, Codable {
     var id: String = "main"
-    
+
     var fullName: String
     var address: String
     var city: String
+    var state: String
+    var zip: String
     var country: String
     var phone: String
     var isPrimary: Bool = true
-    
+
     var asDictionary: [String: Any] {
         return [
             "fullName": fullName,
             "address": address,
             "city": city,
+            "state": state,
+            "zip": zip,
             "country": country,
             "phone": phone,
             "isPrimary": isPrimary,
@@ -75,6 +79,8 @@ final class AddressManager: ObservableObject {
             fullName: data["fullName"] as? String ?? "",
             address: data["address"] as? String ?? "",
             city: data["city"] as? String ?? "",
+            state: data["state"] as? String ?? "",
+            zip: data["zip"] as? String ?? "",
             country: data["country"] as? String ?? "",
             phone: data["phone"] as? String ?? "",
             isPrimary: true

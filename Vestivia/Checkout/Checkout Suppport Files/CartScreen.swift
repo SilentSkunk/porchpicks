@@ -289,9 +289,11 @@ struct CartScreen: View {
                 let converted = UserAddress(
                     id: UUID().uuidString,
                     fullName: addr.fullName,
-                    address: combinedAddress,        // US street address
+                    address: combinedAddress,
                     city: addr.city,
-                    country: "US",               // fixed for US‑only app
+                    state: addr.state,
+                    zip: addr.zip,
+                    country: "US",
                     phone: addr.phone,
                     isPrimary: true
                 )
@@ -315,7 +317,7 @@ struct CartScreen: View {
 
 extension UserAddress {
     var displayString: String {
-        "\(address), \(city)"
+        "\(address), \(city), \(state) \(zip)"
     }
 }
 

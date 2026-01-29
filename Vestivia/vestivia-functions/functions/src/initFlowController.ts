@@ -67,68 +67,97 @@ export const initFlowController = onCall(
       );
     }
 
-    // 1 – find or create stripe customer
-    const customerId = await findOrCreateStripeCustomer(uid, stripe);
+    let createdNewCustomer = false;
+    let customerId: string | undefined;
 
-    // 2 – ephemeral key
-    const ephemeralKey = await stripe.ephemeralKeys.create({
-      customer: customerId,
-    });
+    try {
+      // 1 – find or create stripe customer
+      const customerResult = await findOrCreateStripeCustomer(uid, stripe);
+      customerId = customerResult.customerId;
+      createdNewCustomer = customerResult.isNew;
 
-    // 3 – PaymentIntent
-    const totalAmount = subtotal + shipping;
+      // 2 – ephemeral key
+      const ephemeralKey = await stripe.ephemeralKeys.create({
+        customer: customerId,
+      });
 
-    // Generate idempotency key to prevent duplicate PaymentIntents on retry
-    const idempotencyKey = generateIdempotencyKey(uid, address.line1 || "checkout", totalAmount);
+      // 3 – PaymentIntent
+      const totalAmount = subtotal + shipping;
 
-    const params = {
-      amount: totalAmount, // pre-tax
-      currency,
-      customer: customerId,
-      automatic_payment_methods: { enabled: true },
-      shipping: {
-        name: address.name || "Customer",
-        address: {
-          line1: address.line1,
-          ...(address.city ? { city: address.city } : {}),
-          ...(address.state ? { state: address.state } : {}),
-          ...(address.postal_code ? { postal_code: address.postal_code } : {}),
-          country: (address.country || "US").toUpperCase(),
+      // Generate idempotency key to prevent duplicate PaymentIntents on retry
+      const idempotencyKey = generateIdempotencyKey(uid, address.line1 || "checkout", totalAmount);
+
+      const params = {
+        amount: totalAmount, // pre-tax
+        currency,
+        customer: customerId,
+        automatic_payment_methods: { enabled: true },
+        shipping: {
+          name: address.name || "Customer",
+          address: {
+            line1: address.line1,
+            ...(address.city ? { city: address.city } : {}),
+            ...(address.state ? { state: address.state } : {}),
+            ...(address.postal_code ? { postal_code: address.postal_code } : {}),
+            country: (address.country || "US").toUpperCase(),
+          },
         },
-      },
-      metadata: {
-        subtotal: subtotal.toString(),
-        shipping: shipping.toString(),
-        tax_category: "clothing",
-      },
-    } as Stripe.PaymentIntentCreateParams;
+        metadata: {
+          subtotal: subtotal.toString(),
+          shipping: shipping.toString(),
+          tax_category: "clothing",
+        },
+      } as Stripe.PaymentIntentCreateParams;
 
-    const paymentIntent = await stripe.paymentIntents.create(params, { idempotencyKey });
+      const paymentIntent = await stripe.paymentIntents.create(params, { idempotencyKey });
 
-    console.log(
-      "[initFlowController] PI created",
-      paymentIntent.id,
-      "amount:",
-      paymentIntent.amount
-    );
+      console.log(
+        "[initFlowController] PI created",
+        paymentIntent.id,
+        "amount:",
+        paymentIntent.amount
+      );
 
-    return {
-      paymentIntent: paymentIntent.client_secret,
-      ephemeralKey: ephemeralKey.secret,
-      customer: customerId,
-      publishableKey: STRIPE_PUBLISHABLE_KEY.value(), // ✅ Use .value()
+      return {
+        paymentIntent: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customer: customerId,
+        publishableKey: STRIPE_PUBLISHABLE_KEY.value(),
 
-      // Explicit client-visible breakdown
-      amountSubtotal: subtotal,
-      amountShipping: shipping, // ✅ expose shipping separately
-      amountTax: null,          // calculated by Stripe internally
-      amountTotal: paymentIntent.amount,
-    };
+        // Explicit client-visible breakdown
+        amountSubtotal: subtotal,
+        amountShipping: shipping,
+        amountTax: null,
+        amountTotal: paymentIntent.amount,
+      };
+
+    } catch (error) {
+      // Rollback if we created a new customer but later steps failed
+      if (createdNewCustomer && customerId) {
+        try {
+          console.warn("[initFlowController] Rolling back customer creation", { uid, customerId });
+
+          // Delete from Firestore
+          await admin.firestore()
+            .collection("stripe_customers")
+            .doc(uid)
+            .delete();
+
+        } catch (rollbackError) {
+          console.error("[initFlowController] Rollback failed", rollbackError);
+        }
+      }
+
+      throw error;
+    }
   }
 );
 
-// ✅ Updated helper to accept stripe instance
-async function findOrCreateStripeCustomer(uid: string, stripe: Stripe): Promise<string> {
+// Updated helper to return whether customer was newly created
+async function findOrCreateStripeCustomer(
+  uid: string,
+  stripe: Stripe
+): Promise<{ customerId: string; isNew: boolean }> {
   const doc = await admin
     .firestore()
     .collection("stripe_customers")
@@ -136,7 +165,10 @@ async function findOrCreateStripeCustomer(uid: string, stripe: Stripe): Promise<
     .get();
 
   if (doc.exists && doc.get("customerId")) {
-    return doc.get("customerId");
+    return {
+      customerId: doc.get("customerId"),
+      isNew: false,
+    };
   }
 
   const customer = await stripe.customers.create({
@@ -145,5 +177,8 @@ async function findOrCreateStripeCustomer(uid: string, stripe: Stripe): Promise<
 
   await doc.ref.set({ customerId: customer.id }, { merge: true });
 
-  return customer.id;
+  return {
+    customerId: customer.id,
+    isNew: true,
+  };
 }

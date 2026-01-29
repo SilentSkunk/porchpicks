@@ -41,7 +41,8 @@ class CartViewModel: ObservableObject {
     
     // Checkout (Step 9)
     @Published var isCheckingOut: Bool = false
-    
+    @Published var checkoutError: String? = nil
+
     // Added for selected shipping rate
     @Published var selectedShippingRate: ShippoRate? = nil
     
@@ -166,8 +167,53 @@ class CartViewModel: ObservableObject {
     var total: Double {
         subtotal + (Double(selectedShippingRate?.amount ?? "0") ?? 0)
     }
-    
-    
+
+    // ------------------------------------------------------
+    // MARK: - Address Validation
+    // ------------------------------------------------------
+
+    private static let validUSStates: Set<String> = [
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"
+    ]
+
+    func validateAddressForShipping(_ address: UserAddress) -> String? {
+        // Check required fields
+        if address.fullName.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Full name is required"
+        }
+        if address.address.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Street address is required"
+        }
+        if address.city.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "City is required"
+        }
+
+        // Validate state
+        let stateUpper = address.state.trimmingCharacters(in: .whitespaces).uppercased()
+        if stateUpper.isEmpty {
+            return "State is required"
+        }
+        if !Self.validUSStates.contains(stateUpper) {
+            return "Invalid US state: \(address.state)"
+        }
+
+        // Validate ZIP code (5 digits or 5+4 format)
+        let zipTrimmed = address.zip.trimmingCharacters(in: .whitespaces)
+        if zipTrimmed.isEmpty {
+            return "ZIP code is required"
+        }
+        let zipPattern = #"^\d{5}(-\d{4})?$"#
+        if zipTrimmed.range(of: zipPattern, options: .regularExpression) == nil {
+            return "Invalid ZIP code format"
+        }
+
+        return nil
+    }
+
     // ------------------------------------------------------
     // MARK: - UI Actions (Step 1–3)
     // ------------------------------------------------------
@@ -232,12 +278,20 @@ class CartViewModel: ObservableObject {
     }
 
     private func performCheckout() async {
+        checkoutError = nil
+
         guard let address = selectedAddress else {
-            print("❌ No address selected")
+            checkoutError = "No address selected"
             return
         }
         guard let firstItem = cartItems.first else {
-            print("❌ Cart empty")
+            checkoutError = "Cart is empty"
+            return
+        }
+
+        // Validate address before calling shipping API
+        if let validationError = validateAddressForShipping(address) {
+            checkoutError = validationError
             return
         }
 
@@ -255,7 +309,7 @@ class CartViewModel: ObservableObject {
                 .sorted(by: { (Double($0.amount) ?? 0) < (Double($1.amount) ?? 0) })
                 .first
             else {
-                print("❌ No shipping rates available")
+                checkoutError = "No shipping rates available for this address"
                 return
             }
 
@@ -294,6 +348,7 @@ class CartViewModel: ObservableObject {
 
         } catch {
             print("❌ Checkout failed: \(error)")
+            checkoutError = "Checkout failed: \(error.localizedDescription)"
         }
     }
 

@@ -307,6 +307,14 @@ struct CartScreen: View {
         } message: {
             Text(checkoutAlertMessage)
         }
+        .alert("Checkout Error", isPresented: Binding(
+            get: { vm.checkoutError != nil },
+            set: { if !$0 { vm.checkoutError = nil } }
+        )) {
+            Button("OK", role: .cancel) { vm.checkoutError = nil }
+        } message: {
+            Text(vm.checkoutError ?? "")
+        }
         .onAppear {
             print("🛒 [CartScreen] incomingItem =", incomingItem as Any)
             print("🛒 [CartScreen] cartItems BEFORE load =", vm.cartItems)

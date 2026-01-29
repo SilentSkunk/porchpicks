@@ -96,5 +96,9 @@ export class Logger {
  * Create a logger for a specific function.
  */
 export function createLogger(functionName: string, uid?: string): Logger {
-  return new Logger({ function: functionName, uid });
+  const context: LogContext = { function: functionName };
+  if (uid) {
+    context.uid = uid;
+  }
+  return new Logger(context);
 }

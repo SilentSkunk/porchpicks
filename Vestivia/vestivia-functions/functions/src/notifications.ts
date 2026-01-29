@@ -94,10 +94,10 @@ async function getAllUserFcmTokens(uid: string): Promise<string[]> {
   // 2) top-level arrays / fields
   const user = userDoc.data() || {};
 
-  const topSingle = typeof user.fcmToken === "string" ? [user.fcmToken] : [];
-  const topArray = Array.isArray(user.fcmTokens) ? user.fcmTokens : [];
-  const topMsgArray = Array.isArray(user.messagingTokens)
-    ? user.messagingTokens
+  const topSingle = typeof user["fcmToken"] === "string" ? [user["fcmToken"]] : [];
+  const topArray = Array.isArray(user["fcmTokens"]) ? user["fcmTokens"] : [];
+  const topMsgArray = Array.isArray(user["messagingTokens"])
+    ? user["messagingTokens"]
     : [];
 
   tokens.push(
@@ -153,9 +153,9 @@ export const onMatchInboxNotify = onDocumentCreated(
       return;
     }
 
-    const brandLower: string = String(data.brandLower ?? "");
+    const brandLower: string = String(data["brandLower"] ?? "");
     const score: number | null =
-      typeof data.score === "number" ? (data.score as number) : null;
+      typeof data["score"] === "number" ? (data["score"] as number) : null;
 
     const title = "We found a match!";
     const body = brandLower
@@ -166,17 +166,31 @@ export const onMatchInboxNotify = onDocumentCreated(
     const deeplink = `vestivia://listing/${encodeURIComponent(listingId)}`;
 
     // Optional image to show in the notification (if client supports it)
-    const imageUrl =
-      typeof data.primaryImageUrl === "string" && data.primaryImageUrl
-        ? String(data.primaryImageUrl)
+    const imageUrl: string | undefined =
+      typeof data["primaryImageUrl"] === "string" && data["primaryImageUrl"]
+        ? String(data["primaryImageUrl"])
         : undefined;
+
+    // Build notification object - only include imageUrl if defined
+    const notification: admin.messaging.Notification = { title, body };
+    if (imageUrl) {
+      notification.imageUrl = imageUrl;
+    }
+
+    // Build fcmOptions - only include imageUrl if defined
+    const apnsFcmOptions: admin.messaging.ApnsFcmOptions = {
+      analyticsLabel: "match_inbox",
+    };
+    if (imageUrl) {
+      apnsFcmOptions.imageUrl = imageUrl;
+    }
 
     const message: admin.messaging.MulticastMessage = {
       tokens,
-      notification: { title, body, imageUrl },
+      notification,
       data: {
         type: "match",
-        listingId: String(data.listingId ?? listingId ?? ""),
+        listingId: String(data["listingId"] ?? listingId ?? ""),
         brandLower: brandLower,
         score: score != null ? String(score) : "",
         deeplink,
@@ -190,10 +204,7 @@ export const onMatchInboxNotify = onDocumentCreated(
             badge: 1,
           },
         },
-        fcmOptions: {
-          analyticsLabel: "match_inbox",
-          imageUrl,
-        },
+        fcmOptions: apnsFcmOptions,
       },
     };
 
@@ -220,13 +231,14 @@ export const onMatchInboxNotify = onDocumentCreated(
             msg.toLowerCase().includes("unregistered") ||
             msg.toLowerCase().includes("not registered");
 
-          if (isInvalid) invalid.push(tokens[i]);
+          const token = tokens[i];
+          if (isInvalid && token) invalid.push(token);
 
           console.log("[NOTIF] push:send:error", {
             idx: i,
             code,
             message: msg,
-            token: tokens[i]?.slice(0, 12) + "…",
+            token: token ? token.slice(0, 12) + "…" : "unknown",
           });
         }
       });

@@ -38,9 +38,9 @@ export const createPaymentIntent = onCall(
     }
 
     const metadata: Record<string, string> = {};
-    if (listingId) metadata.listingId = String(listingId);
-    if (buyerId) metadata.buyerId = String(buyerId);
-    if (sellerId) metadata.sellerId = String(sellerId);
+    if (listingId) metadata["listingId"] = String(listingId);
+    if (buyerId) metadata["buyerId"] = String(buyerId);
+    if (sellerId) metadata["sellerId"] = String(sellerId);
 
     // Generate idempotency key to prevent duplicate PaymentIntents on retry
     const idempotencyKey = generateIdempotencyKey(

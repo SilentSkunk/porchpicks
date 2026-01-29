@@ -47,8 +47,8 @@ async function markListingSold(opts: {
     const current = listingSnap.data() || {};
 
     // Only transition from "active" to "sold" (prevents race conditions)
-    if (current.status !== "active") {
-      console.log("[WEBHOOK] Listing not active", { status: current.status, paymentIntentId });
+    if (current["status"] !== "active") {
+      console.log("[WEBHOOK] Listing not active", { status: current["status"], paymentIntentId });
       return;
     }
 
@@ -124,9 +124,9 @@ export const stripeWebhook = onRequest({ region: "us-central1", invoker: "public
   }
 
   // Read Stripe secrets from injected Secret Manager values
-  const secretKey = process.env.STRIPE_SECRET_KEY as string | undefined;
-  const dashboardWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string | undefined;
-  const cliSecret = process.env.STRIPE_CLI_WEBHOOK_SECRET as string | undefined;
+  const secretKey = process.env["STRIPE_SECRET_KEY"] as string | undefined;
+  const dashboardWebhookSecret = process.env["STRIPE_WEBHOOK_SECRET"] as string | undefined;
+  const cliSecret = process.env["STRIPE_CLI_WEBHOOK_SECRET"] as string | undefined;
 
   const hasRawBody = typeof (req as any).rawBody !== "undefined" && (req as any).rawBody !== null;
   console.log("[STRIPE] env check", {
@@ -158,8 +158,8 @@ export const stripeWebhook = onRequest({ region: "us-central1", invoker: "public
     : Buffer.from(JSON.stringify(req.body ?? {}));
 
   // Detect environment properly
-  const isProduction = process.env.GCLOUD_PROJECT?.includes('prod') ||
-                       process.env.NODE_ENV === 'production';
+  const isProduction = process.env["GCLOUD_PROJECT"]?.includes('prod') ||
+                       process.env["NODE_ENV"] === 'production';
 
   const webhookSecret = isProduction
     ? dashboardWebhookSecret  // Dashboard secret only in production
@@ -189,15 +189,16 @@ export const stripeWebhook = onRequest({ region: "us-central1", invoker: "public
       const pi = event.data.object as Stripe.PaymentIntent;
       console.log("💰 Payment succeeded:", { id: pi.id, amount: pi.amount, customer: pi.customer, metadata: pi.metadata });
 
-      const listingId = (pi.metadata?.listingId as string) || "";
-      const sellerId = (pi.metadata?.sellerId as string) || "";
-      const buyerId = (pi.metadata?.buyerId as string) || undefined;
+      const listingId = (pi.metadata?.["listingId"] as string) || "";
+      const sellerId = (pi.metadata?.["sellerId"] as string) || "";
+      const buyerIdRaw = pi.metadata?.["buyerId"] as string | undefined;
+      const buyerId = buyerIdRaw || undefined;
 
       if (listingId && sellerId) {
         await markListingSold({
           listingId,
           sellerId,
-          buyerId,
+          ...(buyerId ? { buyerId } : {}),
           paymentIntentId: pi.id,
           amount: (pi.amount_received ?? pi.amount) as number,
           currency: pi.currency,

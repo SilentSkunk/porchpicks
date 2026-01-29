@@ -70,11 +70,10 @@ export const initPaymentSheet = onCall(
         (snap.get("displayName") as string | undefined) ??
         undefined;
 
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        name: userName,
-        metadata: { uid },
-      });
+      const customerParams: Stripe.CustomerCreateParams = { metadata: { uid } };
+      if (userEmail) customerParams.email = userEmail;
+      if (userName) customerParams.name = userName;
+      const customer = await stripe.customers.create(customerParams);
       customerId = customer.id;
       await userRef.set({ stripeCustomerId: customerId }, { merge: true });
     }
@@ -85,14 +84,15 @@ export const initPaymentSheet = onCall(
       type: "card",
       limit: 1,
     });
-    const hasSaved = pmList.data.length > 0;
-    const savedSummary = hasSaved
+    const firstPm = pmList.data[0];
+    const hasSaved = !!firstPm;
+    const savedSummary = firstPm
       ? {
-          brand: pmList.data[0].card?.brand || null,
-          last4: pmList.data[0].card?.last4 || null,
-          expMonth: pmList.data[0].card?.exp_month || null,
-          expYear: pmList.data[0].card?.exp_year || null,
-          paymentMethodId: pmList.data[0].id || null,
+          brand: firstPm.card?.brand || null,
+          last4: firstPm.card?.last4 || null,
+          expMonth: firstPm.card?.exp_month || null,
+          expYear: firstPm.card?.exp_year || null,
+          paymentMethodId: firstPm.id || null,
         }
       : null;
 
@@ -102,40 +102,40 @@ export const initPaymentSheet = onCall(
     });
 
     // Build a Stripe-compliant Shipping object only when we have enough data.
-    const shippingParams: Stripe.PaymentIntentCreateParams.Shipping | undefined = shipping
-      ? {
-          // Stripe's type expects `name` to be a string (not undefined).
-          name: shipping.fullName || "Customer",
-          // Optional
-          phone: shipping.phone || undefined,
-          // Address requires at least line1 and country.
-          address: {
-            line1: shipping.address || "Unknown",
-            country: (shipping.country || "US").toUpperCase(),
-            ...(shipping.city ? { city: shipping.city } : {}),
-          },
-        }
-      : undefined;
+    let shippingParams: Stripe.PaymentIntentCreateParams.Shipping | undefined;
+    if (shipping) {
+      const shippingObj: Stripe.PaymentIntentCreateParams.Shipping = {
+        name: shipping.fullName || "Customer",
+        address: {
+          line1: shipping.address || "Unknown",
+          country: (shipping.country || "US").toUpperCase(),
+        },
+      };
+      if (shipping.phone) shippingObj.phone = shipping.phone;
+      if (shipping.city) shippingObj.address.city = shipping.city;
+      shippingParams = shippingObj;
+    }
 
     // Generate idempotency key to prevent duplicate PaymentIntents on retry
     const idempotencyKey = generateIdempotencyKey(uid, listingId || "checkout", amount as number);
 
     // Create PaymentIntent for the provided amount
-    const paymentIntent = await stripe.paymentIntents.create(
-      {
-        amount: amount as number,
-        currency,
-        customer: customerId,
-        automatic_payment_methods: { enabled: true },
-        shipping: shippingParams,
-        metadata: {
-          ...(listingId ? { listingId } : {}),
-          ...(sellerId ? { sellerId } : {}),
-          buyerId, // always include buyer uid
-        },
+    const piParams: Stripe.PaymentIntentCreateParams = {
+      amount: amount as number,
+      currency,
+      customer: customerId,
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        ...(listingId ? { listingId } : {}),
+        ...(sellerId ? { sellerId } : {}),
+        buyerId, // always include buyer uid
       },
-      { idempotencyKey }
-    );
+    };
+    if (shippingParams) {
+      piParams.shipping = shippingParams;
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(piParams, { idempotencyKey });
 
     if (!paymentIntent.client_secret) {
       throw new HttpsError("internal", "Failed to create payment intent.");
@@ -148,7 +148,7 @@ export const initPaymentSheet = onCall(
       // NEW: help the client reflect "remembered card" state without another round-trip
       hasSavedPaymentMethod: hasSaved,
       paymentMethodSummary: savedSummary,
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
+      publishableKey: process.env["STRIPE_PUBLISHABLE_KEY"] || null,
     };
   }
 );
@@ -180,14 +180,15 @@ export const getPaymentSummary = onCall(
       type: "card",
       limit: 1,
     });
-    const hasSaved = pmList.data.length > 0;
-    const savedSummary = hasSaved
+    const pm = pmList.data[0];
+    const hasSaved = !!pm;
+    const savedSummary = pm
       ? {
-          brand: pmList.data[0].card?.brand || null,
-          last4: pmList.data[0].card?.last4 || null,
-          expMonth: pmList.data[0].card?.exp_month || null,
-          expYear: pmList.data[0].card?.exp_year || null,
-          paymentMethodId: pmList.data[0].id || null,
+          brand: pm.card?.brand || null,
+          last4: pm.card?.last4 || null,
+          expMonth: pm.card?.exp_month || null,
+          expYear: pm.card?.exp_year || null,
+          paymentMethodId: pm.id || null,
         }
       : null;
 

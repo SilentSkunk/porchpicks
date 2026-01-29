@@ -23,28 +23,37 @@ async function markListingSold(opts: {
   const { listingId, sellerId, buyerId, paymentIntentId, amount, currency } = opts;
   const db = admin.firestore();
 
-  const sellerListingRef = db
-    .collection("users")
-    .doc(sellerId)
-    .collection("listings")
-    .doc(listingId);
+  // Use paymentIntentId as order document ID (natural deduplication)
+  const orderRef = db.collection("orders").doc(paymentIntentId);
 
-  const mirrorRef = db.collection("all_listings").doc(listingId);
+  // Check if we've already processed this payment (pre-transaction idempotency)
+  const existingOrder = await orderRef.get();
+  if (existingOrder.exists) {
+    console.log("[WEBHOOK] Already processed (idempotent)", { paymentIntentId });
+    return;
+  }
 
+  // Now proceed with transaction
   await db.runTransaction(async (tx) => {
-    const listingSnap = await tx.get(sellerListingRef);
+    const listingSnap = await tx.get(
+      db.collection("users").doc(sellerId).collection("listings").doc(listingId)
+    );
+
     if (!listingSnap.exists) {
       // If the seller listing doc does not exist, bail but do not fail the webhook
       return;
     }
 
     const current = listingSnap.data() || {};
-    if (current.status === "sold" || current.isAvailable === false) {
-      // Already sold/updated in a prior delivery – idempotent exit
+
+    // Only transition from "active" to "sold" (prevents race conditions)
+    if (current.status !== "active") {
+      console.log("[WEBHOOK] Listing not active", { status: current.status, paymentIntentId });
       return;
     }
 
-    const update = {
+    // Update listing
+    tx.update(listingSnap.ref, {
       status: "sold",
       isAvailable: false,
       soldAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -52,43 +61,33 @@ async function markListingSold(opts: {
       orderPaymentIntentId: paymentIntentId,
       saleAmount: amount,
       saleCurrency: currency,
-    } as Record<string, unknown>;
+    });
 
-    tx.update(sellerListingRef, update);
+    // Mirror to all_listings
+    const mirrorRef = db.collection("all_listings").doc(listingId);
+    tx.set(mirrorRef, {
+      status: "sold",
+      isAvailable: false,
+      soldAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
 
-    // Mirror (if present) – tolerate absence
-    const mirrorSnap = await tx.get(mirrorRef);
-    if (mirrorSnap.exists) {
-      tx.update(mirrorRef, update);
-    }
+    // Create order record (using paymentIntentId as ID prevents duplicates)
+    tx.set(orderRef, {
+      paymentIntentId,
+      listingId,
+      sellerId,
+      buyerId: buyerId || null,
+      amount,
+      currency,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: "paid",
+      source: "stripe",
+    });
 
-    // Minimal central order record (optional but useful for ops)
-    const ordersRef = db.collection("orders").doc(paymentIntentId);
-    tx.set(
-      ordersRef,
-      {
-        paymentIntentId,
-        listingId,
-        sellerId,
-        buyerId: buyerId || null,
-        amount,
-        currency,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        status: "paid",
-        source: "stripe",
-      },
-      { merge: true }
-    );
-
-    // Per-user views (optional): buyer orders & seller sales
+    // Buyer/seller views
     if (buyerId) {
-      const buyerOrderRef = db
-        .collection("users")
-        .doc(buyerId)
-        .collection("orders")
-        .doc(paymentIntentId);
       tx.set(
-        buyerOrderRef,
+        db.collection("users").doc(buyerId).collection("orders").doc(paymentIntentId),
         {
           listingId,
           paymentIntentId,
@@ -96,18 +95,12 @@ async function markListingSold(opts: {
           currency,
           status: "paid",
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
+        }
       );
     }
 
-    const sellerSaleRef = db
-      .collection("users")
-      .doc(sellerId)
-      .collection("sales")
-      .doc(paymentIntentId);
     tx.set(
-      sellerSaleRef,
+      db.collection("users").doc(sellerId).collection("sales").doc(paymentIntentId),
       {
         listingId,
         paymentIntentId,
@@ -115,10 +108,11 @@ async function markListingSold(opts: {
         currency,
         status: "paid",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
+      }
     );
   });
+
+  console.log("[WEBHOOK] Order created", { paymentIntentId, listingId });
 }
 
 export const stripeWebhook = onRequest({ region: "us-central1", invoker: "public", secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_CLI_WEBHOOK_SECRET] }, async (req, res) => {

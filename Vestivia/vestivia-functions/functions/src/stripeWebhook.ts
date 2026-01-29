@@ -163,34 +163,28 @@ export const stripeWebhook = onRequest({ region: "us-central1", invoker: "public
     ? Buffer.from(rb)
     : Buffer.from(JSON.stringify(req.body ?? {}));
 
+  // Detect environment properly
+  const isProduction = process.env.GCLOUD_PROJECT?.includes('prod') ||
+                       process.env.NODE_ENV === 'production';
+
+  const webhookSecret = isProduction
+    ? dashboardWebhookSecret  // Dashboard secret only in production
+    : cliSecret || dashboardWebhookSecret;  // CLI secret in development, fallback to dashboard
+
+  if (!webhookSecret) {
+    console.error("❌ No webhook secret configured");
+    res.status(500).send("Server misconfigured: no webhook secret");
+    return;
+  }
+
   let event: Stripe.Event;
   try {
-    // Try verifying with your dashboard-configured secret first
-    event = stripe.webhooks.constructEvent(
-      payload,
-      sig,
-      dashboardWebhookSecret
-    );
-    console.log("🔐 Verified with dashboard secret");
-  } catch (dashErr: any) {
-    // If dashboard verification fails and a CLI secret exists, try that (useful for `stripe listen` tests)
-    if (!cliSecret) {
-      console.error("❌ Webhook verify failed (dashboard secret):", dashErr?.message || dashErr);
-      res.status(400).send(`Webhook Error: ${dashErr?.message || "invalid signature"}`);
-      return;
-    }
-    try {
-      event = stripe.webhooks.constructEvent(
-        payload,
-        sig,
-        cliSecret
-      );
-      console.log("🔐 Verified with CLI secret");
-    } catch (cliErr: any) {
-      console.error("❌ Webhook verify failed (dashboard & CLI)", { dash: dashErr?.message || dashErr, cli: cliErr?.message || cliErr });
-      res.status(400).send("Webhook Error: signature verification failed");
-      return;
-    }
+    event = stripe.webhooks.constructEvent(payload, sig, webhookSecret);
+    console.log("🔐 Webhook verified", { isProduction });
+  } catch (err: any) {
+    console.error("❌ Webhook verification failed:", err?.message);
+    res.status(400).send(`Webhook Error: ${err?.message || "invalid signature"}`);
+    return;
   }
 
   console.log("✅ Received event:", { type: event.type, id: event.id });

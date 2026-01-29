@@ -8,6 +8,7 @@ if (!admin.apps.length) admin.initializeApp();
 
 const SHIPPO_TEST_KEY = defineSecret("SHIPPO_TEST_KEY");
 const SHIPPO_API = "https://api.goshippo.com";
+const OUNCES_PER_POUND = 16;
 
 const authHeader = (key: string) => ({
   Authorization: `ShippoToken ${key}`,
@@ -130,11 +131,11 @@ export const ShippoShipmentGetRates = onCall(
       },
       parcels: [
         {
-          weight: (parcel.weightOz / 16).toFixed(2), // Shippo takes lb by default when unit omitted
+          weight: Number((parcel.weightOz / OUNCES_PER_POUND).toFixed(2)),
           mass_unit: "lb",
-          length: parcel.lengthIn.toFixed(2),
-          width: parcel.widthIn.toFixed(2),
-          height: parcel.heightIn.toFixed(2),
+          length: Number(parcel.lengthIn.toFixed(2)),
+          width: Number(parcel.widthIn.toFixed(2)),
+          height: Number(parcel.heightIn.toFixed(2)),
           distance_unit: "in",
         },
       ],

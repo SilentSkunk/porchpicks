@@ -256,7 +256,30 @@ struct SellerProfileView: View {
     private func tabBody(profile: SellerProfile) -> some View {
         switch selectedTab {
         case .forSale:
-            listingList(items: forSaleVM.items, emptyText: "Nothing on your porch yet")
+            if forSaleVM.isLoading && forSaleVM.items.isEmpty {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading listings...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else if let error = forSaleVM.error, forSaleVM.items.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.secondary)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("Retry") { forSaleVM.start() }
+                        .buttonStyle(.bordered)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else {
+                listingList(items: forSaleVM.items, emptyText: "Nothing on your porch yet")
+            }
         case .likes:
             listingList(items: likesVM.items, emptyText: "No saved picks yet")
                 .refreshable {

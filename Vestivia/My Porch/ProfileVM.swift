@@ -57,14 +57,25 @@ final class ProfileVM: ObservableObject {
     }
 
     private func loadImage(from url: URL) {
-        // Tiny cache via URLCache.shared; simple and good enough here.
-        var req = URLRequest(url: url)
-        req.cachePolicy = .returnCacheDataElseLoad
-        URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
-            guard let self = self, let data = data, let ui = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self.avatarImage = Image(uiImage: ui)
+        // Use async/await to avoid memory leaks from nested closure captures
+        Task { [weak self] in
+            guard let self = self else { return }
+
+            var req = URLRequest(url: url)
+            req.cachePolicy = .returnCacheDataElseLoad
+
+            do {
+                let (data, _) = try await URLSession.shared.data(for: req)
+                guard let ui = UIImage(data: data) else { return }
+
+                await MainActor.run { [weak self] in
+                    self?.avatarImage = Image(uiImage: ui)
+                }
+            } catch {
+                #if DEBUG
+                print("[ProfileVM] Failed to load avatar: \(error.localizedDescription)")
+                #endif
             }
-        }.resume()
+        }
     }
 }

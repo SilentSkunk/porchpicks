@@ -141,13 +141,29 @@ struct AddListingViewSingle: View {
                 
                 // Description Section
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Description")
-                        .font(.headline)
+                    HStack {
+                        Text("Description")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(viewModel.description.count)/1000")
+                            .font(.caption)
+                            .foregroundColor(viewModel.description.count > 1000 ? .red : .secondary)
+                    }
                     TextEditor(text: $viewModel.description)
                         .frame(height: 100)
                         .padding(4)
                         .background(Color(UIColor.secondarySystemBackground))
                         .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(viewModel.description.count > 1000 ? Color.red : Color.clear, lineWidth: 1)
+                        )
+                        .onChange(of: viewModel.description) { newValue in
+                            // Limit input to prevent excessive typing
+                            if newValue.count > 1100 {
+                                viewModel.description = String(newValue.prefix(1100))
+                            }
+                        }
                 }
                 
                 // Details Section
@@ -324,7 +340,8 @@ struct AddListingViewSingle: View {
                     if viewModel.validate() {
                         isSubmitting = true
                         Task {
-                            let listing = viewModel.toSingleListing()
+                            // Use async method to compress images on background thread
+                            let listing = await viewModel.toSingleListingAsync()
                             // Dismiss immediately; let the submission finish in the background
                             dismiss()
                             await ListingSubmission.shared.submit(listing: listing, patternJPEGData: patternJPEGData)

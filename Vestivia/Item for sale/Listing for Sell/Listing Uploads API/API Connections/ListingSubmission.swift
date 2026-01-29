@@ -16,6 +16,14 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 
+// MARK: - Listing Upload Notifications
+extension Notification.Name {
+    static let listingUploadStarted = Notification.Name("listingUploadStarted")
+    static let listingUploadProgress = Notification.Name("listingUploadProgress")
+    static let listingUploadFailed = Notification.Name("listingUploadFailed")
+    static let listingUploadCompleted = Notification.Name("listingUploadCompleted")
+}
+
 /// Lifecycle status for a listing
 enum ListingStatus: String {
     case active
@@ -89,17 +97,82 @@ class ListingSubmission {
     func submit(listing: SingleListing, patternJPEGData: Data?) async {
         print("🟢 Submitting listing: \(listing.description)")
 
-        var uploadedImageIds: [String] = []
+        // Notify UI that upload started
+        await MainActor.run {
+            NotificationCenter.default.post(name: .listingUploadStarted, object: nil)
+        }
 
-        // 1️⃣ Upload each image to Cloudflare
-        for imageData in listing.imageData {
-            do {
-                let imageId = try await CloudflareUploader.shared.uploadImage(imageData: imageData)
-                uploadedImageIds.append(imageId)
-                print("✅ Uploaded image to Cloudflare (imageId): \(imageId)")
-            } catch {
-                print("❌ Error uploading to Cloudflare: \(error)")
+        var uploadedImageIds: [String] = []
+        let totalImages = listing.imageData.count
+        let maxRetries = 3
+
+        // 1️⃣ Upload each image to Cloudflare with retry logic
+        for (index, imageData) in listing.imageData.enumerated() {
+            var attempts = 0
+            var lastError: Error?
+            var uploadSuccess = false
+
+            while attempts < maxRetries && !uploadSuccess {
+                do {
+                    let imageId = try await CloudflareUploader.shared.uploadImage(imageData: imageData)
+                    uploadedImageIds.append(imageId)
+                    uploadSuccess = true
+                    print("✅ Uploaded image \(index + 1)/\(totalImages) to Cloudflare (imageId): \(imageId)")
+
+                    // Update progress
+                    await MainActor.run {
+                        let progress = Double(index + 1) / Double(totalImages)
+                        NotificationCenter.default.post(
+                            name: .listingUploadProgress,
+                            object: nil,
+                            userInfo: ["progress": progress, "current": index + 1, "total": totalImages]
+                        )
+                    }
+                } catch {
+                    lastError = error
+                    attempts += 1
+                    print("⚠️ Upload attempt \(attempts)/\(maxRetries) failed for image \(index + 1): \(error.localizedDescription)")
+
+                    if attempts < maxRetries {
+                        // Exponential backoff before retry
+                        try? await Task.sleep(nanoseconds: UInt64(attempts * 1_000_000_000))
+                    }
+                }
             }
+
+            // If all retries failed for this image, abort the submission
+            if !uploadSuccess {
+                let errorMessage = "Failed to upload image \(index + 1) after \(maxRetries) attempts. Please check your connection and try again."
+                print("❌ \(errorMessage)")
+
+                await MainActor.run {
+                    NotificationCenter.default.post(
+                        name: .listingUploadFailed,
+                        object: nil,
+                        userInfo: [
+                            "error": errorMessage,
+                            "failedIndex": index,
+                            "underlyingError": lastError?.localizedDescription ?? "Unknown error"
+                        ]
+                    )
+                }
+                return // ✅ Stop submission instead of continuing with missing images
+            }
+        }
+
+        // Verify we have at least one image
+        guard !uploadedImageIds.isEmpty else {
+            let errorMessage = "At least one image is required to create a listing."
+            print("❌ \(errorMessage)")
+
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .listingUploadFailed,
+                    object: nil,
+                    userInfo: ["error": errorMessage]
+                )
+            }
+            return
         }
 
         // 2️⃣ Create JSON representation
@@ -166,7 +239,16 @@ class ListingSubmission {
         // 5️⃣ Save the listing and atomically bump listingsVersion on the user profile
         do {
             guard let userId = finalListingData["userId"] as? String else {
-                print("❌ Cannot save listing: userId is missing")
+                let errorMessage = "Cannot save listing: You must be logged in"
+                print("❌ \(errorMessage)")
+
+                await MainActor.run {
+                    NotificationCenter.default.post(
+                        name: .listingUploadFailed,
+                        object: nil,
+                        userInfo: ["error": errorMessage]
+                    )
+                }
                 return
             }
             finalListingData["path"] = "users/\(userId)/listings/\(listingID)"
@@ -214,8 +296,26 @@ class ListingSubmission {
 
             try await batch.commit()
             print("✅ Saved full listing to Firestore with ID \(listingID) and bumped listingsVersion")
+
+            // Notify UI of successful completion
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .listingUploadCompleted,
+                    object: nil,
+                    userInfo: ["listingID": listingID]
+                )
+            }
         } catch {
             print("❌ Error saving listing to Firestore: \(error)")
+
+            // Notify UI of failure
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .listingUploadFailed,
+                    object: nil,
+                    userInfo: ["error": "Failed to save listing: \(error.localizedDescription)"]
+                )
+            }
         }
     }
 

@@ -153,26 +153,56 @@ private enum _LocalActivePatternsStoreCompat {
     }
 }
 
-// MARK: - Config (set your endpoints)
+// MARK: - Config (Firebase Functions based)
 
 enum PatternMatchAPI {
-    /// POST { imageId, filters: {brand, size} } → { results: [...] }
-    static let searchEndpoint       = URL(string: "https://your.api.example.com/api/search")!
+    // MARK: - Environment
+    private enum Environment {
+        case development
+        case production
 
-    /// POST { imageId, filters: {brand, size} } → { ok: true, searchId }
-    static let activeSearchEndpoint = URL(string: "https://your.api.example.com/api/active-search")!
-
-    /// Check if endpoints have been configured (not left as placeholders)
-    static var isConfigured: Bool {
-        guard let host2 = searchEndpoint.host,
-              let host3 = activeSearchEndpoint.host else { return false }
-        return !host2.contains("your.api.example.com")
-            && !host3.contains("your.api.example.com")
+        static var current: Environment {
+            #if DEBUG
+            return .development
+            #else
+            return .production
+            #endif
+        }
     }
 
-    /// Build your purchase deeplink/web URL
+    // MARK: - Firebase Region
+    private static let firebaseRegion = "us-central1"
+
+    /// Base URL for Firebase Functions (pattern matching is handled via Storage triggers)
+    /// These endpoints are optional - matching happens automatically via onBuyerPatternUpload trigger
+    static var searchEndpoint: URL? {
+        // Pattern matching is handled by Firebase Storage triggers, not direct API calls
+        // This URL is kept for potential future direct-query functionality
+        nil
+    }
+
+    static var activeSearchEndpoint: URL? {
+        // Active search is created via Firestore write in PatternMatchViewModel.submit()
+        // No direct API call needed
+        nil
+    }
+
+    /// Check if the system is configured for pattern matching
+    /// Returns true because matching happens via Firebase Storage triggers
+    static var isConfigured: Bool {
+        // Pattern matching uses Firebase Storage triggers (onBuyerPatternUpload)
+        // No external API endpoints required
+        true
+    }
+
+    /// Build deep link URL for viewing a listing
     static func purchaseURL(for listingId: String) -> URL {
-        URL(string: "yourapp://listing/\(listingId)")!
+        // Use app deep link scheme
+        if let url = URL(string: "vestivia://listing/\(listingId)") {
+            return url
+        }
+        // Fallback to web URL if deep link fails
+        return URL(string: "https://vestivia.com/listing/\(listingId)") ?? URL(string: "https://vestivia.com")!
     }
 }
 
@@ -315,12 +345,20 @@ final class PatternMatchViewModel: ObservableObject {
     // MARK: - Networking
 
 
+    /// Search for matching patterns (currently handled by Firebase Storage triggers)
+    /// This method is preserved for potential future direct-query functionality
     private func search(usingFirebasePath path: String) async throws {
+        guard let endpoint = PatternMatchAPI.searchEndpoint else {
+            log("Search endpoint not configured - matching handled via Storage triggers")
+            // Matching is handled by onBuyerPatternUpload trigger, results arrive via matchInbox
+            return
+        }
+
         isSearching = true
         log("POST /search")
         defer { isSearching = false }
 
-        var req = URLRequest(url: PatternMatchAPI.searchEndpoint)
+        var req = URLRequest(url: endpoint)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
@@ -344,10 +382,18 @@ final class PatternMatchViewModel: ObservableObject {
         self.results = parsed.results
     }
 
+    /// Create an active search subscription (currently handled by Firestore write in submit())
+    /// This method is preserved for potential future direct-query functionality
     @discardableResult
     private func createActiveSearch(firebasePath path: String) async throws -> CreateActiveSearchResponse {
+        guard let endpoint = PatternMatchAPI.activeSearchEndpoint else {
+            log("Active search endpoint not configured - active search created via Firestore")
+            // Active search is created in submit() via Firestore write
+            return CreateActiveSearchResponse(ok: true, searchId: nil)
+        }
+
         log("POST /active-search")
-        var req = URLRequest(url: PatternMatchAPI.activeSearchEndpoint)
+        var req = URLRequest(url: endpoint)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 

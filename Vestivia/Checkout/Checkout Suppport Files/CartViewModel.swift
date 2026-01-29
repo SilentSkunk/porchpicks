@@ -18,6 +18,8 @@ import Combine
 import StripePaymentSheet
 import Stripe
 import FirebaseFunctions
+import FirebaseFirestore
+import FirebaseAuth
 
 @MainActor
 class CartViewModel: ObservableObject {
@@ -437,6 +439,9 @@ class CartViewModel: ObservableObject {
         )
     }
 
+    @Published var checkoutSuccess: Bool = false
+    @Published var completedOrderId: String? = nil
+
     private func saveOrder(
         trackingNumber: String,
         shippingRate: ShippoRate,
@@ -448,7 +453,87 @@ class CartViewModel: ObservableObject {
         - Shipping: \(shippingRate.amount) \(shippingRate.currency)
         - Carrier: \(label.carrier)
         """)
-        // TODO: Persist full order to Firestore
+
+        guard let buyerId = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "Order", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        guard let address = selectedAddress else {
+            throw NSError(domain: "Order", code: 400, userInfo: [NSLocalizedDescriptionKey: "No shipping address"])
+        }
+
+        let db = Firestore.firestore()
+        let orderId = UUID().uuidString
+
+        // Serialize cart items
+        let itemsData: [[String: Any]] = cartItems.map { item in
+            [
+                "id": item.id,
+                "listingId": item.listingId ?? "",
+                "sellerId": item.sellerId ?? "",
+                "title": item.title,
+                "price": item.price,
+                "quantity": item.quantity,
+                "imageUrl": item.imageUrl ?? ""
+            ]
+        }
+
+        // Get seller ID from first item (single-seller checkout)
+        let sellerId = cartItems.first?.sellerId ?? ""
+
+        // Build order document
+        let orderData: [String: Any] = [
+            "orderId": orderId,
+            "buyerId": buyerId,
+            "sellerId": sellerId,
+            "items": itemsData,
+            "subtotal": subtotal,
+            "shippingAmount": Double(shippingRate.amount) ?? 0,
+            "shippingCurrency": shippingRate.currency,
+            "total": total,
+            "status": "pending_shipment",
+            "trackingNumber": trackingNumber,
+            "carrier": label.carrier,
+            "labelUrl": label.labelUrl,
+            "shippingService": shippingRate.servicelevelName ?? "Standard",
+            "estimatedDays": shippingRate.estimatedDays ?? 0,
+            "shippingAddress": [
+                "fullName": address.fullName,
+                "address": address.address,
+                "city": address.city,
+                "state": address.state,
+                "zip": address.zip,
+                "country": address.country,
+                "phone": address.phone
+            ],
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        // Save to orders collection
+        let orderRef = db.collection("orders").document(orderId)
+
+        // Also create references in buyer's and seller's order subcollections
+        let buyerOrderRef = db.collection("users").document(buyerId).collection("orders").document(orderId)
+        let sellerOrderRef = sellerId.isEmpty ? nil : db.collection("users").document(sellerId).collection("orders").document(orderId)
+
+        // Use batch write for atomicity
+        let batch = db.batch()
+        batch.setData(orderData, forDocument: orderRef)
+        batch.setData(orderData, forDocument: buyerOrderRef)
+        if let sellerRef = sellerOrderRef {
+            batch.setData(orderData, forDocument: sellerRef)
+        }
+
+        try await batch.commit()
+        print("✅ Order saved to Firestore with ID: \(orderId)")
+
+        // Update UI state
+        await MainActor.run {
+            self.checkoutSuccess = true
+            self.completedOrderId = orderId
+            self.cartItems.removeAll() // Clear cart after successful checkout
+        }
     }
 }
 

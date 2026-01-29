@@ -333,13 +333,10 @@ private func wireResultCaching(searcher: HitsSearcher) {
             return try? JSONDecoder().decode(ListingHit.self, from: data)
         }
         #if DEBUG
-        self.debugDumpHits(typedHits, source: "onResults")
-        #endif
-        #if DEBUG
-        self.debugLog("API response: \(typedHits.count) items, key=\(self.currentCacheKey())")
-        if typedHits.isEmpty {
-            self.debugLog("Warning: API response decoding yielded zero typed hits")
-        }
+        // debugDumpHits disabled for performance - uses expensive Mirror reflection
+        // Uncomment for debugging hit field issues:
+        // self.debugDumpHits(typedHits, source: "onResults")
+        print("[Algolia] onResults: \(typedHits.count) items") // lightweight log only
         #endif
         // Kick off signed-URL prefetch for this page so UI can render private images
         self.prefetchThumbs(for: typedHits)

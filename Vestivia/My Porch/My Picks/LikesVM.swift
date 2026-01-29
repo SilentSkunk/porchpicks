@@ -22,6 +22,11 @@ final class LikesVM: ObservableObject {
     private var likedIDs: [String] = []
     private var summaries: [String: ListingSummary] = [:] // keyed by listingId
 
+    // Serial queue for thread-safe cache operations
+    private let cacheQueue = DispatchQueue(label: "com.vestivia.likesCache", qos: .utility)
+    // Debounce disk writes to avoid excessive I/O
+    private var pendingSaveTask: Task<Void, Never>? = nil
+
     // Disk cache for hero URLs (per-user small JSON file)
     private var imagesCacheFileURL: URL {
         let fm = FileManager.default
@@ -32,38 +37,68 @@ final class LikesVM: ObservableObject {
     }
 
     private struct _DiskImageCacheEntry: Codable { let url: String; let exp: TimeInterval? }
+
+    /// Load hero image cache from disk (runs on background queue)
     private func loadImagesCacheFromDisk() {
-        do {
-            let data = try Data(contentsOf: imagesCacheFileURL)
-            let decoded = try JSONDecoder().decode([String: _DiskImageCacheEntry].self, from: data)
-            var map: [String: URL] = [:]
-            var exp: [String: TimeInterval] = [:]
-            for (id, e) in decoded {
-                if let u = URL(string: e.url) {
-                    map[id] = u
-                    if let t = e.exp { exp[id] = t }
+        let fileURL = imagesCacheFileURL
+        cacheQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let data = try Data(contentsOf: fileURL)
+                let decoded = try JSONDecoder().decode([String: _DiskImageCacheEntry].self, from: data)
+                var map: [String: URL] = [:]
+                var exp: [String: TimeInterval] = [:]
+                for (id, e) in decoded {
+                    if let u = URL(string: e.url) {
+                        map[id] = u
+                        if let t = e.exp { exp[id] = t }
+                    }
                 }
-            }
-            self.heroURLById = map
-            self.heroExpById = exp
-            #if DEBUG
-            print("[LikesVM] loaded hero cache entries:", map.count)
-            #endif
-        } catch { /* first run / no cache is fine */ }
+                Task { @MainActor [weak self] in
+                    self?.heroURLById = map
+                    self?.heroExpById = exp
+                    #if DEBUG
+                    print("[LikesVM] loaded hero cache entries:", map.count)
+                    #endif
+                }
+            } catch { /* first run / no cache is fine */ }
+        }
     }
 
+    /// Save hero image cache to disk (runs on background queue with debouncing)
     private func saveImagesCacheToDisk() {
-        var out: [String: _DiskImageCacheEntry] = [:]
-        for (id, url) in heroURLById {
-            out[id] = _DiskImageCacheEntry(url: url.absoluteString, exp: heroExpById[id])
+        // Capture current state snapshot
+        let urlsSnapshot = heroURLById
+        let expirySnapshot = heroExpById
+        let fileURL = imagesCacheFileURL
+
+        // Perform disk I/O on background queue
+        cacheQueue.async {
+            var out: [String: _DiskImageCacheEntry] = [:]
+            for (id, url) in urlsSnapshot {
+                out[id] = _DiskImageCacheEntry(url: url.absoluteString, exp: expirySnapshot[id])
+            }
+            do {
+                let data = try JSONEncoder().encode(out)
+                try data.write(to: fileURL, options: [.atomic])
+            } catch {
+                #if DEBUG
+                print("[LikesVM] save hero cache error:", error)
+                #endif
+            }
         }
-        do {
-            let data = try JSONEncoder().encode(out)
-            try data.write(to: imagesCacheFileURL, options: [.atomic])
-        } catch {
-            #if DEBUG
-            print("[LikesVM] save hero cache error:", error)
-            #endif
+    }
+
+    /// Debounced save - coalesces multiple rapid updates into one disk write
+    private func scheduleDebouncedSave() {
+        pendingSaveTask?.cancel()
+        pendingSaveTask = Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms debounce
+            if !Task.isCancelled {
+                await MainActor.run { [weak self] in
+                    self?.saveImagesCacheToDisk()
+                }
+            }
         }
     }
 
@@ -114,7 +149,7 @@ final class LikesVM: ObservableObject {
                         self.heroURLById = [:]
                         self.heroExpById = [:]
                         LikesCache.save(uid: self.uid, likedIDs: [], summaries: [:])
-                        self.saveImagesCacheToDisk()
+                        self.saveImagesCacheToDisk() // Immediate save for bulk clear
                         return
                     }
                     
@@ -198,9 +233,12 @@ final class LikesVM: ObservableObject {
     }
 
     /// Save/update a hero URL (optionally with an expiration epoch) into the Likes image cache.
+    /// Thread-safe: updates in-memory cache immediately, debounces disk writes.
     func setCachedHeroURL(_ url: URL, for listingId: String, exp: TimeInterval? = nil) {
+        // Update in-memory cache immediately (on main thread)
         heroURLById[listingId] = url
         if let e = exp { heroExpById[listingId] = e }
-        saveImagesCacheToDisk()
+        // Debounced disk write to avoid excessive I/O from rapid updates
+        scheduleDebouncedSave()
     }
 }

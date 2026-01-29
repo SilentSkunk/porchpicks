@@ -29,6 +29,8 @@ struct SingleListing: Codable, Identifiable {
     }
     
     // Custom initializer to allow passing UIImages
+    // WARNING: This runs JPEG compression synchronously. For UI responsiveness,
+    // use the async factory method `create(...)` instead.
     init(
         category: String,
         subcategory: String,
@@ -53,5 +55,45 @@ struct SingleListing: Codable, Identifiable {
         self.listingPrice = listingPrice
         self.brand = brand
         self.imageData = images.compactMap { $0.jpegData(compressionQuality: 0.8) }
+    }
+
+    /// Async factory method that compresses images on a background thread.
+    /// Use this from UI code to prevent main thread blocking.
+    static func create(
+        category: String,
+        subcategory: String,
+        size: String,
+        condition: String,
+        gender: String,
+        description: String,
+        color: String,
+        originalPrice: String,
+        listingPrice: String,
+        brand: String,
+        images: [UIImage]
+    ) async -> SingleListing {
+        // Compress images on background thread to prevent UI freeze
+        let compressedData: [Data] = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let data = images.compactMap { $0.jpegData(compressionQuality: 0.8) }
+                continuation.resume(returning: data)
+            }
+        }
+
+        var listing = SingleListing(
+            category: category,
+            subcategory: subcategory,
+            size: size,
+            condition: condition,
+            gender: gender,
+            description: description,
+            color: color,
+            originalPrice: originalPrice,
+            listingPrice: listingPrice,
+            brand: brand,
+            images: [] // Empty - we'll set imageData directly
+        )
+        listing.imageData = compressedData
+        return listing
     }
 }

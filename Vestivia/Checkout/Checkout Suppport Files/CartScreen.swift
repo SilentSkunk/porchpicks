@@ -315,6 +315,21 @@ struct CartScreen: View {
         } message: {
             Text(vm.checkoutError ?? "")
         }
+        .alert("Order Placed!", isPresented: $vm.checkoutSuccess) {
+            Button("View Order") {
+                // Future: navigate to order details
+                dismiss()
+            }
+            Button("Done", role: .cancel) {
+                dismiss()
+            }
+        } message: {
+            if let orderId = vm.completedOrderId {
+                Text("Your order has been placed successfully.\n\nOrder ID: \(orderId.prefix(8))...")
+            } else {
+                Text("Your order has been placed successfully!")
+            }
+        }
         .onAppear {
             print("🛒 [CartScreen] incomingItem =", incomingItem as Any)
             print("🛒 [CartScreen] cartItems BEFORE load =", vm.cartItems)

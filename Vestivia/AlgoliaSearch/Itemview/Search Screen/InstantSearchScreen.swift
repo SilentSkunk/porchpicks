@@ -74,6 +74,9 @@ struct InstantSearchScreen: View {
         GridItem(.flexible(), spacing: 14)
     ]
 
+    // Search debouncing to reduce API calls
+    @State private var searchDebounceTask: Task<Void, Never>? = nil
+
     private var activeFiltersCount: Int {
         [selectedCategory, selectedBrand, selectedSize, selectedColor, selectedCondition]
             .compactMap { $0 }
@@ -105,10 +108,26 @@ struct InstantSearchScreen: View {
     private var queryBinding: Binding<String> {
         Binding(
             get: { coordinator.searchBoxController.query },
-            set: {
-                coordinator.searchBoxController.query = $0
-                // Trigger a new search whenever the text changes
-                coordinator.searchBoxController.submit()
+            set: { newValue in
+                coordinator.searchBoxController.query = newValue
+
+                // Cancel any pending debounced search
+                searchDebounceTask?.cancel()
+
+                // Clear query triggers instant search (for UX responsiveness)
+                if newValue.isEmpty {
+                    coordinator.searchBoxController.submit()
+                } else {
+                    // Debounce non-empty queries by 300ms to reduce API calls
+                    searchDebounceTask = Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                        if !Task.isCancelled {
+                            await MainActor.run {
+                                coordinator.searchBoxController.submit()
+                            }
+                        }
+                    }
+                }
             }
         )
     }
@@ -399,6 +418,8 @@ struct InstantSearchScreen: View {
     }
 
 // MARK: - GridThumbCard for grid tiles with signed Thumbnail URL
+// PERFORMANCE: Firestore listeners removed to prevent 40 listeners for 20 items
+// Like status is now checked on-demand when user taps the heart or views detail
 private struct GridThumbCard: View {
     let hit: ListingHit
     let coordinator: InstantSearchCoordinator
@@ -409,10 +430,7 @@ private struct GridThumbCard: View {
     @State private var thumb: URL? = nil
     @State private var isLiked: Bool = false
     @State private var likeCount: Int = 0
-#if canImport(FirebaseFirestore)
-    @State private var userLikeListener: ListenerRegistration? = nil
-    @State private var countListener: ListenerRegistration? = nil
-#endif
+    @State private var isLoadingLike: Bool = false
 
     init(hit: ListingHit, coordinator: InstantSearchCoordinator, title: String, sellerName: String, priceText: String) {
         self.hit = hit
@@ -494,28 +512,25 @@ private struct GridThumbCard: View {
         }
         .padding(3)
         .task {
-            // Observe like status and count for this card
-            if let owner = InstantSearchScreen.ownerUid(from: hit) {
-#if canImport(FirebaseFirestore)
-                userLikeListener = LikesService.observeUserLike(ownerUid: owner, listingId: hit.listingID) { liked in
-                    self.isLiked = liked
-                }
-                countListener = LikesService.observeLikeCount(ownerUid: owner, listingId: hit.listingID) { count in
-                    self.likeCount = count
-                }
-#else
-                // If Firestore not available in this target, you can provide stubs/no-op
-#endif
-            }
+            // PERFORMANCE: Removed per-cell Firestore listeners (was creating 40 listeners for 20 items)
+            // Like status is fetched once on appearance, not via real-time listener
             // Build public Cloudflare Images URL for the Thumbnail variant (public)
             let u = buildThumbURL() ?? fallbackURL
             thumb = u
-        }
-        .onDisappear {
-#if canImport(FirebaseFirestore)
-            userLikeListener?.remove(); userLikeListener = nil
-            countListener?.remove(); countListener = nil
-#endif
+
+            // One-time fetch of like status (non-blocking, no listener)
+            if let owner = InstantSearchScreen.ownerUid(from: hit) {
+                Task.detached(priority: .low) {
+                    do {
+                        let liked = try await LikesService.isLiked(ownerUid: owner, listingId: hit.listingID)
+                        await MainActor.run {
+                            self.isLiked = liked
+                        }
+                    } catch {
+                        // Silently ignore - like status is not critical for grid display
+                    }
+                }
+            }
         }
     }
 }

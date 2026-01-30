@@ -132,12 +132,16 @@ final class ChatService {
             .order(by: "updatedAt", descending: true)
             .addSnapshotListener { snap, err in
                 if let err = err {
+                    #if DEBUG
                     print("[Conversations] listener error:", err.localizedDescription)
+                    #endif
                     onChange([])
                     return
                 }
                 guard let snap = snap else {
+                    #if DEBUG
                     print("[Conversations] listener: snapshot is nil")
+                    #endif
                     onChange([])
                     return
                 }
@@ -153,12 +157,16 @@ final class ChatService {
             .limit(to: limit)
             .addSnapshotListener { snap, err in
                 if let err = err {
-                    print("[Messages] listener error (cid=\(cid)):", err.localizedDescription)
+                    #if DEBUG
+                    print("[Messages] listener error:", err.localizedDescription)
+                    #endif
                     onChange([])
                     return
                 }
                 guard let snap = snap else {
-                    print("[Messages] listener: snapshot is nil (cid=\(cid))")
+                    #if DEBUG
+                    print("[Messages] listener: snapshot is nil")
+                    #endif
                     onChange([])
                     return
                 }
@@ -186,7 +194,9 @@ final class ConversationsVM: ObservableObject {
     private var listener: ListenerRegistration?
 
     func start(uid: String) {
-        print("[ConversationsVM] start listening for uid=\(uid)")
+        #if DEBUG
+        print("[ConversationsVM] start listening")
+        #endif
         stop()
         listener = ChatService.shared.listenConversations(for: uid) { [weak self] convs in
             DispatchQueue.main.async { self?.conversations = convs }
@@ -230,7 +240,9 @@ final class ChatVM: ObservableObject {
         } catch {
             // restore input if failed
             input = trimmed
-            print("send failed:", error.localizedDescription)
+            #if DEBUG
+            print("[ChatVM] send failed:", error.localizedDescription)
+            #endif
         }
     }
 }
@@ -302,13 +314,11 @@ struct ChatView: View {
         }
         .navigationTitle("Chat")
         .navigationBarTitleDisplayMode(.inline)
-        .task { if net.isReachable { vm.start() } else { print("[Chat] offline, not starting") } }
+        .task { if net.isReachable { vm.start() } }
         .onChange(of: net.isReachable) { _, reachable in
             if reachable {
-                print("[Chat] came online → start listener")
                 vm.start()
             } else {
-                print("[Chat] went offline → stop listener")
                 vm.stop()
             }
         }
@@ -348,16 +358,12 @@ struct ConversationsListView: View {
         .task {
             if let uid = Auth.auth().currentUser?.uid, net.isReachable {
                 vm.start(uid: uid)
-            } else {
-                print("[Conversations] not starting, offline or no uid")
             }
         }
         .onChange(of: net.isReachable) { _, reachable in
             if reachable, let uid = Auth.auth().currentUser?.uid {
-                print("[Conversations] came online → start listener")
                 vm.start(uid: uid)
             } else {
-                print("[Conversations] went offline → stop listener")
                 vm.stop()
             }
         }

@@ -104,16 +104,35 @@ export const ShippoShipmentGetRates = onCall(
       sellerAddress = from;
     } else if (listingId) {
       // Look up the listing to find the seller
-      const listingDoc = await admin.firestore()
+      // First try all_listings (public mirror)
+      const allListingsDoc = await admin.firestore()
         .collection("all_listings")
         .doc(listingId)
         .get();
 
-      if (!listingDoc.exists) {
-        throw new HttpsError("not-found", "Listing not found");
+      let listingData: FirebaseFirestore.DocumentData | undefined;
+
+      if (allListingsDoc.exists) {
+        listingData = allListingsDoc.data();
+      } else {
+        // If not in all_listings, try collection group query on listings subcollections
+        console.log(`[Shippo] Listing ${listingId} not in all_listings, trying collection group`);
+        const groupQuery = await admin.firestore()
+          .collectionGroup("listings")
+          .where("listingID", "==", listingId)
+          .limit(1)
+          .get();
+
+        const firstDoc = groupQuery.docs[0];
+        if (firstDoc) {
+          listingData = firstDoc.data();
+        }
       }
 
-      const listingData = listingDoc.data();
+      if (!listingData) {
+        console.log(`[Shippo] Listing ${listingId} not found anywhere`);
+        throw new HttpsError("not-found", `Listing not found: ${listingId}`);
+      }
       const sellerId = listingData?.["userId"] as string | undefined;
       if (!sellerId) {
         throw new HttpsError("internal", "Listing has no seller");

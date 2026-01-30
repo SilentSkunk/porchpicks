@@ -134,8 +134,9 @@ export const ShippoShipmentGetRates = onCall(
         throw new HttpsError("not-found", `Listing not found: ${listingId}`);
       }
       const sellerId = listingData?.["userId"] as string | undefined;
+      console.log(`[Shippo] Found listing, sellerId=${sellerId}`);
       if (!sellerId) {
-        throw new HttpsError("internal", "Listing has no seller");
+        throw new HttpsError("failed-precondition", "Listing has no seller (userId missing)");
       }
 
       // Look up seller's shipping address
@@ -145,14 +146,16 @@ export const ShippoShipmentGetRates = onCall(
         .get();
 
       if (!sellerDoc.exists) {
-        throw new HttpsError("not-found", "Seller not found");
+        throw new HttpsError("not-found", `Seller not found: ${sellerId}`);
       }
 
       const sellerData = sellerDoc.data();
+      console.log(`[Shippo] Seller data keys: ${Object.keys(sellerData || {}).join(", ")}`);
       const addr = (sellerData?.["shippingAddress"] || sellerData?.["address"]) as AddressIn | undefined;
+      console.log(`[Shippo] Seller address: ${JSON.stringify(addr)}`);
 
       if (!addr || !addr.address || !addr.city || !addr.state || !addr.zip) {
-        throw new HttpsError("failed-precondition", "Seller has no shipping address configured");
+        throw new HttpsError("failed-precondition", `Seller ${sellerId} has no shipping address configured. Please add address in seller profile.`);
       }
 
       sellerAddress = {
@@ -175,8 +178,15 @@ export const ShippoShipmentGetRates = onCall(
       throw new HttpsError("invalid-argument", "Incomplete seller address");
     }
 
-    const validatedFromState = validateUSState(sellerAddress.state, "from");
-    const validatedFromZip = validateZipCode(sellerAddress.zip, "from");
+    let validatedFromState: string;
+    let validatedFromZip: string;
+    try {
+      validatedFromState = validateUSState(sellerAddress.state, "seller");
+      validatedFromZip = validateZipCode(sellerAddress.zip, "seller");
+    } catch (err: any) {
+      console.log(`[Shippo] Seller address validation failed: ${err.message}`);
+      throw err;
+    }
 
     // Determine parcel dimensions: use provided or default for clothing
     const parcelInfo: ParcelIn = parcel && parcel.weightOz && parcel.lengthIn && parcel.widthIn && parcel.heightIn

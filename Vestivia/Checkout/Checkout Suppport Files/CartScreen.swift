@@ -89,7 +89,9 @@ struct CartItemsSection: View {
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 3)
-                .onAppear { print("🧩 [CartItemsSection] Rendering item:", item) }
+                #if DEBUG
+                .onAppear { print("[CartItemsSection] Rendering item") }
+                #endif
             }
         }
         .padding(.top, 24)
@@ -224,20 +226,27 @@ struct CartScreen: View {
         VStack(spacing: 0) {
             CheckoutTopBar()
 
-            ScrollView {
-                VStack(spacing: 24) {
+            if vm.cartItems.isEmpty {
+                EmptyStateView.emptyCart {
+                    dismiss()
+                }
+                Spacer()
+            } else {
+                ScrollView {
+                    VStack(spacing: 24) {
 
-                    CartItemsSection(items: vm.cartItems)
-                        .padding(.top, 35)
+                        CartItemsSection(items: vm.cartItems)
+                            .padding(.top, 35)
 
                     AddressSection(address: vm.selectedAddress?.displayString) {
                         vm.tapAddress()
                     }
 
                     PaymentSection(paymentMethod: vm.paymentSummary) {
-                        print("🟣 [CartScreen] PaymentSection tapped — launching SetupIntent flow")
+                        #if DEBUG
+                        print("[CartScreen] PaymentSection tapped")
+                        #endif
                         guard let vc = UIApplication.shared.topMostViewController() else {
-                            print("❌ No topMostViewController available")
                             return
                         }
                         let prefill = PaymentMethodManager.Prefill(
@@ -256,31 +265,32 @@ struct CartScreen: View {
                         subtotal: vm.subtotal,
                         shipping: vm.selectedShippingRate.flatMap { Double($0.amount) } ?? 0
                     )
-                }
-                .padding(.top, -20)
-            }
-
-            CheckoutButton(title: vm.isCheckingOut ? "Processing…" : "Checkout") {
-                // Validate required details
-                if vm.selectedAddress == nil && vm.paymentSummary == nil {
-                    checkoutAlertMessage = "Please add a delivery address and payment method before checking out."
-                    showCheckoutAlert = true
-                    return
-                }
-                if vm.selectedAddress == nil {
-                    checkoutAlertMessage = "Please add a delivery address before checking out."
-                    showCheckoutAlert = true
-                    return
-                }
-                if vm.paymentSummary == nil {
-                    checkoutAlertMessage = "Please add a payment method before checking out."
-                    showCheckoutAlert = true
-                    return
+                    }
+                    .padding(.top, -20)
                 }
 
-                // All good — continue checkout
-                if let vc = UIApplication.shared.topMostViewController() {
-                    vm.checkout()
+                CheckoutButton(title: vm.isCheckingOut ? "Processing…" : "Checkout") {
+                    // Validate required details
+                    if vm.selectedAddress == nil && vm.paymentSummary == nil {
+                        checkoutAlertMessage = "Please add a delivery address and payment method before checking out."
+                        showCheckoutAlert = true
+                        return
+                    }
+                    if vm.selectedAddress == nil {
+                        checkoutAlertMessage = "Please add a delivery address before checking out."
+                        showCheckoutAlert = true
+                        return
+                    }
+                    if vm.paymentSummary == nil {
+                        checkoutAlertMessage = "Please add a payment method before checking out."
+                        showCheckoutAlert = true
+                        return
+                    }
+
+                    // All good — continue checkout
+                    if let vc = UIApplication.shared.topMostViewController() {
+                        vm.checkout()
+                    }
                 }
             }
         }
@@ -331,10 +341,7 @@ struct CartScreen: View {
             }
         }
         .onAppear {
-            print("🛒 [CartScreen] incomingItem =", incomingItem as Any)
-            print("🛒 [CartScreen] cartItems BEFORE load =", vm.cartItems)
             vm.loadCartOnAppear(incoming: incomingItem)
-            print("🛒 [CartScreen] cartItems AFTER load =", vm.cartItems)
             Task { await vm.loadSavedAddress() }
         }
     }

@@ -474,7 +474,7 @@ class CartViewModel: ObservableObject {
                 "title": item.title,
                 "price": item.price,
                 "quantity": item.quantity,
-                "imageUrl": item.imageUrl ?? ""
+                "imageUrl": item.imageName ?? ""
             ]
         }
 

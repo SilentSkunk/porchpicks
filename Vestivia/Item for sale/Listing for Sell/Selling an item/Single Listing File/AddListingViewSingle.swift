@@ -274,7 +274,7 @@ struct AddListingViewSingle: View {
                         .cornerRadius(8)
                     }
                     .sheet(isPresented: $isShowingColorPicker) {
-                        ColorListingSelectionSheet(
+                        ColorSelectionSheet(
                             title: "Color",
                             options: fields.colorOptions,
                             selections: $fields.selectedColors

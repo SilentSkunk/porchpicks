@@ -118,21 +118,26 @@ export const ShippoShipmentGetRates = onCall(
       } else {
         // If not in all_listings, try collection group query on listings subcollections
         console.log(`[Shippo] Listing ${listingId} not in all_listings, trying collection group`);
-        const groupQuery = await admin.firestore()
-          .collectionGroup("listings")
-          .where("listingID", "==", listingId)
-          .limit(1)
-          .get();
+        try {
+          const groupQuery = await admin.firestore()
+            .collectionGroup("listings")
+            .where("listingID", "==", listingId)
+            .limit(1)
+            .get();
 
-        const firstDoc = groupQuery.docs[0];
-        if (firstDoc) {
-          listingData = firstDoc.data();
+          const firstDoc = groupQuery.docs[0];
+          if (firstDoc) {
+            listingData = firstDoc.data();
+          }
+        } catch (indexErr: any) {
+          console.error(`[Shippo] Collection group query failed (index may be missing):`, indexErr.message);
+          // Fall through to "not found" error with helpful message
         }
       }
 
       if (!listingData) {
         console.log(`[Shippo] Listing ${listingId} not found anywhere`);
-        throw new HttpsError("not-found", `Listing not found: ${listingId}`);
+        throw new HttpsError("not-found", `Listing not found in all_listings. Please ensure the listing is synced to the public collection.`);
       }
       const sellerId = listingData?.["userId"] as string | undefined;
       console.log(`[Shippo] Found listing, sellerId=${sellerId}`);

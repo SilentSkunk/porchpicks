@@ -323,6 +323,7 @@ struct InstantSearchScreen: View {
                 Image(systemName: "magnifyingglass")
                     .imageScale(.large)
                     .font(.system(size: 28))
+                    .accessibilityHidden(true)
                 Text("No results").font(.headline)
                 Text("Pulling the latest listings… if this persists, tap Refresh Feed.")
                     .font(.subheadline)
@@ -833,6 +834,7 @@ private struct ProductCard: View {
                         .padding(8)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isLiked ? "Remove from likes" : "Add to likes")
             }
 
             Text(title)

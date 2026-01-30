@@ -590,6 +590,7 @@ private struct BottomBar: View {
                 .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Buy this item for \(price.isEmpty ? "price unavailable" : price)")
         }
         .padding(.horizontal)
         .padding(.vertical, 10)

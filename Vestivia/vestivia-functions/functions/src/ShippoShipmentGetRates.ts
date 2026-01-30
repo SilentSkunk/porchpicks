@@ -77,37 +77,100 @@ export const ShippoShipmentGetRates = onCall(
     const key = SHIPPO_TEST_KEY.value();
     if (!key) throw new HttpsError("internal", "Missing Shippo API key");
 
-    const { to, from, parcel } = req.data as {
+    const { to, from, parcel, listingId } = req.data as {
       to: AddressIn;
-      from: AddressIn;
-      parcel: ParcelIn;
+      from?: AddressIn;
+      parcel?: ParcelIn;
+      listingId?: string;
       carrier?: string;
       service?: string;
     } || {};
 
-    // Basic validation
-    if (!to || !from || !parcel) {
-      throw new HttpsError("invalid-argument", "Missing to/from/parcel");
+    // Validate buyer's address (to)
+    if (!to) {
+      throw new HttpsError("invalid-argument", "Missing 'to' address");
     }
     if (!to.address || !to.city || !to.state || !to.zip) {
       throw new HttpsError("invalid-argument", "Incomplete 'to' address");
     }
-    if (!from.address || !from.city || !from.state || !from.zip) {
-      throw new HttpsError("invalid-argument", "Incomplete 'from' address");
-    }
-    if (!parcel.weightOz || !parcel.lengthIn || !parcel.widthIn || !parcel.heightIn) {
-      throw new HttpsError("invalid-argument", "Incomplete parcel");
-    }
 
-    // Validate state and ZIP formats
+    // Validate state and ZIP formats for buyer
     const validatedToState = validateUSState(to.state, "to");
     const validatedToZip = validateZipCode(to.zip, "to");
-    const validatedFromState = validateUSState(from.state, "from");
-    const validatedFromZip = validateZipCode(from.zip, "from");
+
+    // Determine seller address: use provided 'from' or look up from listing
+    let sellerAddress: AddressIn;
+    if (from && from.address && from.city && from.state && from.zip) {
+      sellerAddress = from;
+    } else if (listingId) {
+      // Look up the listing to find the seller
+      const listingDoc = await admin.firestore()
+        .collection("all_listings")
+        .doc(listingId)
+        .get();
+
+      if (!listingDoc.exists) {
+        throw new HttpsError("not-found", "Listing not found");
+      }
+
+      const listingData = listingDoc.data();
+      const sellerId = listingData?.userId;
+      if (!sellerId) {
+        throw new HttpsError("internal", "Listing has no seller");
+      }
+
+      // Look up seller's shipping address
+      const sellerDoc = await admin.firestore()
+        .collection("users")
+        .doc(sellerId)
+        .get();
+
+      if (!sellerDoc.exists) {
+        throw new HttpsError("not-found", "Seller not found");
+      }
+
+      const sellerData = sellerDoc.data();
+      const addr = sellerData?.shippingAddress || sellerData?.address;
+
+      if (!addr || !addr.address || !addr.city || !addr.state || !addr.zip) {
+        throw new HttpsError("failed-precondition", "Seller has no shipping address configured");
+      }
+
+      sellerAddress = {
+        fullName: addr.fullName || sellerData?.displayName || sellerData?.username || "",
+        address: addr.address,
+        city: addr.city,
+        state: addr.state,
+        zip: addr.zip,
+        country: addr.country || "US",
+        phone: addr.phone,
+      };
+    } else {
+      throw new HttpsError("invalid-argument", "Missing 'from' address or 'listingId'");
+    }
+
+    // Validate seller address
+    if (!sellerAddress.address || !sellerAddress.city || !sellerAddress.state || !sellerAddress.zip) {
+      throw new HttpsError("invalid-argument", "Incomplete seller address");
+    }
+
+    const validatedFromState = validateUSState(sellerAddress.state, "from");
+    const validatedFromZip = validateZipCode(sellerAddress.zip, "from");
+
+    // Determine parcel dimensions: use provided or default for clothing
+    const parcelInfo: ParcelIn = parcel && parcel.weightOz && parcel.lengthIn && parcel.widthIn && parcel.heightIn
+      ? parcel
+      : {
+          // Default parcel for clothing: ~1 lb, standard poly mailer size
+          weightOz: 16,    // 1 pound
+          lengthIn: 12,    // 12 inches
+          widthIn: 9,      // 9 inches
+          heightIn: 2,     // 2 inches (folded clothing)
+        };
 
     // Default countries to US if omitted
     const toCountry = (to.country || "US").toUpperCase();
-    const fromCountry = (from.country || "US").toUpperCase();
+    const fromCountry = (sellerAddress.country || "US").toUpperCase();
 
     // Build Shippo shipment payload with validated addresses
     const shipmentPayload = {
@@ -121,21 +184,21 @@ export const ShippoShipmentGetRates = onCall(
         phone: to.phone || undefined,
       },
       address_from: {
-        name: from.fullName || "",
-        street1: from.address,
-        city: from.city,
+        name: sellerAddress.fullName || "",
+        street1: sellerAddress.address,
+        city: sellerAddress.city,
         state: validatedFromState,
         zip: validatedFromZip,
         country: fromCountry,
-        phone: from.phone || undefined,
+        phone: sellerAddress.phone || undefined,
       },
       parcels: [
         {
-          weight: Number((parcel.weightOz / OUNCES_PER_POUND).toFixed(2)),
+          weight: Number((parcelInfo.weightOz / OUNCES_PER_POUND).toFixed(2)),
           mass_unit: "lb",
-          length: Number(parcel.lengthIn.toFixed(2)),
-          width: Number(parcel.widthIn.toFixed(2)),
-          height: Number(parcel.heightIn.toFixed(2)),
+          length: Number(parcelInfo.lengthIn.toFixed(2)),
+          width: Number(parcelInfo.widthIn.toFixed(2)),
+          height: Number(parcelInfo.heightIn.toFixed(2)),
           distance_unit: "in",
         },
       ],

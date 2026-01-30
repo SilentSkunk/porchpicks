@@ -95,7 +95,9 @@ class ListingSubmission {
     }
 
     func submit(listing: SingleListing, patternJPEGData: Data?) async {
-        print("🟢 Submitting listing: \(listing.description)")
+        #if DEBUG
+        print("[ListingSubmission] Submitting listing")
+        #endif
 
         // Notify UI that upload started
         await MainActor.run {
@@ -117,7 +119,9 @@ class ListingSubmission {
                     let imageId = try await CloudflareUploader.shared.uploadImage(imageData: imageData)
                     uploadedImageIds.append(imageId)
                     uploadSuccess = true
-                    print("✅ Uploaded image \(index + 1)/\(totalImages) to Cloudflare (imageId): \(imageId)")
+                    #if DEBUG
+                    print("[ListingSubmission] Uploaded image \(index + 1)/\(totalImages)")
+                    #endif
 
                     // Update progress
                     await MainActor.run {
@@ -131,7 +135,9 @@ class ListingSubmission {
                 } catch {
                     lastError = error
                     attempts += 1
-                    print("⚠️ Upload attempt \(attempts)/\(maxRetries) failed for image \(index + 1): \(error.localizedDescription)")
+                    #if DEBUG
+                    print("[ListingSubmission] Upload attempt \(attempts)/\(maxRetries) failed for image \(index + 1)")
+                    #endif
 
                     if attempts < maxRetries {
                         // Exponential backoff before retry
@@ -143,7 +149,9 @@ class ListingSubmission {
             // If all retries failed for this image, abort the submission
             if !uploadSuccess {
                 let errorMessage = "Failed to upload image \(index + 1) after \(maxRetries) attempts. Please check your connection and try again."
-                print("❌ \(errorMessage)")
+                #if DEBUG
+                print("[ListingSubmission] \(errorMessage)")
+                #endif
 
                 await MainActor.run {
                     NotificationCenter.default.post(
@@ -163,7 +171,9 @@ class ListingSubmission {
         // Verify we have at least one image
         guard !uploadedImageIds.isEmpty else {
             let errorMessage = "At least one image is required to create a listing."
-            print("❌ \(errorMessage)")
+            #if DEBUG
+            print("[ListingSubmission] \(errorMessage)")
+            #endif
 
             await MainActor.run {
                 NotificationCenter.default.post(
@@ -219,9 +229,13 @@ class ListingSubmission {
                 let path = try await uploadPatternImage(for: listing.brand, listingID: listingID, patternData: patternData)
                 finalListingData["patternImagePath"] = path
                 finalListingData["patternBrand"] = Self.slugifyBrand(listing.brand)
-                print("✅ Uploaded pattern image to Firebase Storage at path: \(path)")
+                #if DEBUG
+                print("[ListingSubmission] Uploaded pattern image")
+                #endif
             } catch {
-                print("❌ Error uploading pattern image: \(error)")
+                #if DEBUG
+                print("[ListingSubmission] Error uploading pattern image")
+                #endif
             }
         }
 
@@ -238,7 +252,9 @@ class ListingSubmission {
                 finalListingData["username"] = username
                 finalListingData["usernameLower"] = usernameLower
             } catch {
-                print("⚠️ Could not fetch user profile for username: \(error)")
+                #if DEBUG
+                print("[ListingSubmission] Could not fetch user profile")
+                #endif
             }
         }
 
@@ -246,7 +262,9 @@ class ListingSubmission {
         do {
             guard let userId = finalListingData["userId"] as? String else {
                 let errorMessage = "Cannot save listing: You must be logged in"
-                print("❌ \(errorMessage)")
+                #if DEBUG
+                print("[ListingSubmission] \(errorMessage)")
+                #endif
 
                 await MainActor.run {
                     NotificationCenter.default.post(
@@ -301,7 +319,9 @@ class ListingSubmission {
             batch.setData(publicDoc, forDocument: publicRef, merge: true)
 
             try await batch.commit()
-            print("✅ Saved full listing to Firestore with ID \(listingID) and bumped listingsVersion")
+            #if DEBUG
+            print("[ListingSubmission] Saved listing to Firestore")
+            #endif
 
             // Notify UI of successful completion
             await MainActor.run {
@@ -312,7 +332,9 @@ class ListingSubmission {
                 )
             }
         } catch {
-            print("❌ Error saving listing to Firestore: \(error)")
+            #if DEBUG
+            print("[ListingSubmission] Error saving listing to Firestore")
+            #endif
 
             // Notify UI of failure
             await MainActor.run {
@@ -352,7 +374,9 @@ class ListingSubmission {
         batch.setData(updates, forDocument: listingRef, merge: true)
         batch.setData(updates, forDocument: publicRef, merge: true)
         try await batch.commit()
-        print("✅ Updated status for listing \(listingID) to \(newStatus.rawValue)")
+        #if DEBUG
+        print("[ListingSubmission] Updated status for listing to \(newStatus.rawValue)")
+        #endif
     }
 }
 
@@ -363,26 +387,22 @@ fileprivate extension StorageReference {
             meta.contentType = contentType
         }
 
-        // Debug: log what we're about to upload
-        let path = self.fullPath
+        #if DEBUG
         let byteCount = uploadData.count
-        print("📤 [Storage] putData start path=\(path) bytes=\(byteCount) contentType=\(meta.contentType ?? "nil")")
+        print("[Storage] putData start bytes=\(byteCount)")
+        #endif
 
         return try await withCheckedThrowingContinuation { continuation in
-            let startedAt = Date()
             self.putData(uploadData, metadata: meta) { metadata, error in
-                let elapsed = Date().timeIntervalSince(startedAt)
-                let elapsedStr = String(format: "%.2fs", elapsed)
-
                 if let error = error as NSError? {
-                    // Debug: include code/domain for better triage
-                    print("❌ [Storage] putData failed path=\(path) elapsed=\(elapsedStr) code=\(error.code) domain=\(error.domain) desc=\(error.localizedDescription)")
+                    #if DEBUG
+                    print("[Storage] putData failed")
+                    #endif
                     continuation.resume(throwing: error)
                 } else {
-                    let size = metadata?.size ?? Int64(byteCount)
-                    let name = metadata?.name ?? "(unknown)"
-                    let contentType = metadata?.contentType ?? "(unknown)"
-                    print("✅ [Storage] putData ok path=\(path) name=\(name) elapsed=\(elapsedStr) size=\(size) contentType=\(contentType)")
+                    #if DEBUG
+                    print("[Storage] putData ok")
+                    #endif
                     continuation.resume(returning: ())
                 }
             }

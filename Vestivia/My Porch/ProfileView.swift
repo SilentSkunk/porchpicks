@@ -112,23 +112,18 @@ private struct AvatarHeaderView: View {
                                 image
                                     .resizable()
                                     .scaledToFill()
-                                    .onAppear { print("[AvatarHeader] AsyncImage success") }
                             case .failure:
                                 Image(systemName: "person.crop.circle.fill")
                                     .resizable()
                                     .scaledToFill()
-                                    .onAppear { print("[AvatarHeader] AsyncImage failure for URL: \(url)") }
                             case .empty:
                                 ProgressView()
-                                    .onAppear { print("[AvatarHeader] AsyncImage loading...") }
                             @unknown default:
                                 Image(systemName: "person.crop.circle.fill")
                                     .resizable()
                                     .scaledToFill()
-                                    .onAppear { print("[AvatarHeader] AsyncImage unknown state") }
                             }
                         }
-                        .onAppear { print("[AvatarHeader] Using avatarURL: \(url.absoluteString)") }
                     } else {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
@@ -233,7 +228,7 @@ private extension View {
 
 // MARK: - Wrapper that binds to your VM
 struct ConnectedProfileView: View {
-    @StateObject private var vm = ProfileVM()
+    @StateObject private var vm = ProfileViewModel()
     @AppStorage("isLoggedIn") private var isLoggedIn: Bool = true
     @State private var avatarURL: URL? = nil
 
@@ -266,40 +261,32 @@ struct ConnectedProfileView: View {
     private func loadAvatar() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let cacheURL = ProfilePhotoService.cacheURL(for: uid)
-        print("[ProfileAvatar] Cache URL: \(cacheURL.path)")
         if FileManager.default.fileExists(atPath: cacheURL.path) {
-            print("[ProfileAvatar] Loaded from cache")
             avatarURL = cacheURL
             return
         }
-        print("[ProfileAvatar] Fetching avatar path from Firestore...")
         Task {
             do {
                 let path = try await resolveAvatarPath(for: uid)
-                print("[ProfileAvatar] Resolved path: \(path)")
                 let storageRef = Storage.storage().reference(withPath: path)
-                print("[ProfileAvatar] Downloading from Storage to cache...")
                 _ = try await storageRef.writeAsync(toFile: cacheURL)
-                print("[ProfileAvatar] Downloaded to: \(cacheURL.path)")
                 await MainActor.run {
                     avatarURL = cacheURL
                 }
             } catch {
-                print("[ProfileAvatar] Error: \(error.localizedDescription)")
-                // Handle errors silently or log
+                #if DEBUG
+                print("[ProfileAvatar] Error loading avatar")
+                #endif
             }
         }
     }
 
     private func resolveAvatarPath(for uid: String) async throws -> String {
-        print("[ProfileAvatar] Reading Firestore for uid: \(uid)")
         let docRef = Firestore.firestore().collection("users").document(uid)
         let doc = try await docRef.getDocument()
         if let avatarPath = doc.data()?["avatarPath"] as? String, !avatarPath.isEmpty {
-            print("[ProfileAvatar] Firestore avatarPath found: \(avatarPath)")
             return avatarPath
         }
-        print("[ProfileAvatar] avatarPath missing—using default path")
         return "profile_images/\(uid)/avatar.jpg"
     }
 
@@ -308,16 +295,16 @@ struct ConnectedProfileView: View {
         let uid = Auth.auth().currentUser?.uid
         do {
             try Auth.auth().signOut()
-            print("[Profile] Signed out")
         } catch {
-            print("[Profile] Sign out error: \(error.localizedDescription)")
+            #if DEBUG
+            print("[Profile] Sign out error")
+            #endif
         }
 
         // Clear avatar cache for the previous user
         if let uid = uid {
             let cacheURL = ProfilePhotoService.cacheURL(for: uid)
             try? FileManager.default.removeItem(at: cacheURL)
-            print("[Profile] Cleared avatar cache: \(cacheURL.path)")
         }
 
         // Reset local UI

@@ -1,5 +1,5 @@
 //
-//  ProfileVM.swift
+//  ProfileViewModel.swift
 //  Exchange
 //
 //  Created by William Hunsucker on 9/8/25.
@@ -11,7 +11,7 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-final class ProfileVM: ObservableObject {
+final class ProfileViewModel: ObservableObject {
     @Published var name: String = ""
     @Published var email: String = ""
     @Published var avatarImage: Image? = nil
@@ -73,7 +73,7 @@ final class ProfileVM: ObservableObject {
                 }
             } catch {
                 #if DEBUG
-                print("[ProfileVM] Failed to load avatar: \(error.localizedDescription)")
+                print("[ProfileViewModel] Failed to load avatar: \(error.localizedDescription)")
                 #endif
             }
         }

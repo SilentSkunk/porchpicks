@@ -12,20 +12,64 @@ final class CloudflareUploader {
     /// Use the same region you deployed your callable functions to
     private lazy var functions = Functions.functions(region: "us-central1")
 
+    // MARK: - Rate Limiting
+    /// Maximum uploads allowed per window
+    private let maxUploadsPerWindow = 20
+    /// Time window for rate limiting (in seconds)
+    private let rateLimitWindowSeconds: TimeInterval = 60
+    /// Track upload timestamps for rate limiting
+    private var uploadTimestamps: [Date] = []
+    /// Serial queue for thread-safe access to timestamps
+    private let rateLimitQueue = DispatchQueue(label: "com.vestivia.cloudflare.ratelimit")
+
     // MARK: - Public API
 
     /// Uploads image data to Cloudflare Images via a one-time direct upload URL.
     /// - Returns: The Cloudflare `imageId` (store this on your Listing in Firestore).
+    /// - Throws: If rate limit exceeded or upload fails.
     @discardableResult
     func uploadImage(imageData: Data, filename: String = "upload.jpg", mimeType: String = "image/jpeg") async throws -> String {
+        // Check rate limit before proceeding
+        try checkRateLimit()
+
         // 1) Get a one-time direct upload URL from Firebase
         let (uploadURL, _) = try await getDirectUploadURL()
 
         // 2) POST multipart/form-data with field name "file"
         let imageId = try await uploadToCloudflareDirectURL(uploadURL: uploadURL, imageData: imageData, mime: mimeType)
 
+        // Record successful upload for rate limiting
+        recordUpload()
+
         // 3) Return the Cloudflare image id (caller should persist it in Firestore)
         return imageId
+    }
+
+    /// Check if upload is allowed under rate limit
+    private func checkRateLimit() throws {
+        rateLimitQueue.sync {
+            let now = Date()
+            let windowStart = now.addingTimeInterval(-rateLimitWindowSeconds)
+
+            // Remove timestamps outside the current window
+            uploadTimestamps = uploadTimestamps.filter { $0 > windowStart }
+        }
+
+        let currentCount = rateLimitQueue.sync { uploadTimestamps.count }
+        if currentCount >= maxUploadsPerWindow {
+            throw NSError(
+                domain: "CloudflareUploader",
+                code: 429,
+                userInfo: [NSLocalizedDescriptionKey: "Upload rate limit exceeded. Please wait before uploading more images."]
+            )
+        }
+    }
+
+    /// Record an upload timestamp for rate limiting
+    private func recordUpload() {
+        rateLimitQueue.sync {
+            uploadTimestamps.append(Date())
+        }
     }
 
     /// Returns a short-lived signed delivery URL for a given Cloudflare `imageId`.

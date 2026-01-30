@@ -130,7 +130,13 @@ final class LikesVM: ObservableObject {
             .addSnapshotListener { [weak self] snap, err in
                 Task { @MainActor in
                     guard let self else { return }
-                    if let err { print("[LikesVM] likes listen error:", err); self.items = []; return }
+                    if let err {
+                        #if DEBUG
+                        print("[LikesVM] likes listen error:", err)
+                        #endif
+                        self.items = []
+                        return
+                    }
                     let docs = snap?.documents ?? []
                     
                     // Build (ownerUid, listingId) pairs from like docs
@@ -171,7 +177,9 @@ final class LikesVM: ObservableObject {
                                             return (pair.listingId, summary)
                                         }
                                     } catch {
+                                        #if DEBUG
                                         print("[LikesVM] fetch listing error:", error)
+                                        #endif
                                     }
                                     return (pair.listingId, nil)
                                 }
@@ -215,7 +223,9 @@ final class LikesVM: ObservableObject {
                     dict[summary.id] = summary
                 }
             } catch {
+                #if DEBUG
                 print("[LikesVM] refresh error:", error)
+                #endif
             }
         }
         summaries = dict

@@ -123,80 +123,22 @@ struct SellerProfileView: View {
                 .frame(height: 180)
                 .clipped()
                 .ignoresSafeArea(edges: .top)
+                .accessibilityHidden(true)
 
             // Centered avatar + username + reviews
             VStack(spacing: 6) {
-                ZStack {
-                    // Image fills the full circle (110x110), then we draw the white ring on top.
-                    Group {
-                        if let fileURL = avatarFileURL {
-                            AsyncImage(url: fileURL) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                        .frame(width: 110, height: 110)
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                case .failure:
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                @unknown default:
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                }
-                            }
-                        } else if let urlString = (avatarURLString ?? profile.profileImageURL),
-                                  let url = URL(string: urlString) {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                        .frame(width: 110, height: 110)
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                case .failure:
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                @unknown default:
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                }
-                            }
-                        } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 110, height: 110)
-                                .clipShape(Circle())
-                        }
-                    }
-                    // White border on top so the image appears to fill to the ring
-                    Circle()
-                        .stroke(Color.white, lineWidth: 3)
-                        .frame(width: 110, height: 110)
-                }
+                ProfileAvatarView(
+                    fileURL: avatarFileURL,
+                    remoteURLString: avatarURLString ?? profile.profileImageURL,
+                    size: 110,
+                    borderColor: .white,
+                    borderWidth: 3
+                )
+
                 Text(profile.username.isEmpty ? "User" : profile.username)
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+
                 Button(action: {}) {
                     Label("Reviews \(String(format: "%.1f", profile.rating))", systemImage: "star")
                         .padding(.horizontal, 10)
@@ -205,11 +147,12 @@ struct SellerProfileView: View {
                         .cornerRadius(8)
                         .foregroundColor(.purple)
                 }
+                .accessibilityLabel("View reviews, rating \(String(format: "%.1f", profile.rating)) stars")
             }
             .padding(.bottom, 0)
-            .offset(y: 24) // slight overlap into white below the banner
+            .offset(y: 24)
         }
-        .frame(height: 180) // enough space for avatar+text+reviews without overlapping next section
+        .frame(height: 180)
     }
     
     @ViewBuilder
@@ -337,14 +280,12 @@ struct SellerProfileView: View {
     @ViewBuilder
     private func listingList(items: [ListingSummary], emptyText: String) -> some View {
         if items.isEmpty {
-            VStack(spacing: 8) {
-                Image(systemName: "shippingbox")
-                    .imageScale(.large)
-                    .foregroundColor(.secondary)
-                Text(emptyText).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 24)
+            EmptyStateView.noItems(
+                title: emptyText,
+                message: selectedTab == .forSale
+                    ? "Items listed for sale will appear here."
+                    : "Items you've liked will appear here."
+            )
         } else {
             List {
                 ForEach(items) { item in

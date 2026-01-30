@@ -17,7 +17,7 @@ import SwiftUI
 import Combine
 import Stripe
 import StripePaymentSheet
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 
 @MainActor
 class PaymentMethodManager: ObservableObject {

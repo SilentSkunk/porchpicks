@@ -288,7 +288,7 @@ struct CartScreen: View {
                     }
 
                     // All good — continue checkout
-                    if let vc = UIApplication.shared.topMostViewController() {
+                    if UIApplication.shared.topMostViewController() != nil {
                         vm.checkout()
                     }
                 }

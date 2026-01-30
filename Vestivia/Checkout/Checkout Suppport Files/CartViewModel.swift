@@ -17,7 +17,7 @@ import SwiftUI
 import Combine
 import StripePaymentSheet
 import Stripe
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 import FirebaseFirestore
 import FirebaseAuth
 
@@ -474,7 +474,7 @@ class CartViewModel: ObservableObject {
                 "title": item.title,
                 "price": item.price,
                 "quantity": item.quantity,
-                "imageUrl": item.imageName ?? ""
+                "imageUrl": item.imageName
             ]
         }
 

@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 
 /// Cloudflare Images helper:
 /// 1) Ask Firebase for a one-time direct-upload URL (getCFDirectUploadURL)

@@ -8,7 +8,7 @@
 
 // FollowService.swift
 import Foundation
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 import FirebaseFirestore
 import FirebaseAuth
 
@@ -62,7 +62,7 @@ final class FollowService {
                 .document(userUid)
                 .collection("listings")
                 .whereField("sold", isEqualTo: false)
-            let agg = try await q.count.getAggregation(source: AggregateSource.server)
+            let agg = try await q.count.getAggregation(source: .server)
             return Int(agg.count)
         } catch {
             return 0

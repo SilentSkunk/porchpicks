@@ -1,7 +1,7 @@
 // ListingDetailHost.swift
 
 import SwiftUI
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 import Foundation
 
 // MARK: - Signed URL in-memory cache (avoid re-signing & re-downloading during TTL)

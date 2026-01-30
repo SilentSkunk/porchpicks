@@ -19,7 +19,7 @@ import UIKit
 import ImageIO
 
 #if canImport(FirebaseFunctions)
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 #endif
 
 // MARK: - Public variants (always accessible via CDN)

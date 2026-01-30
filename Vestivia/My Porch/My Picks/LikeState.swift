@@ -9,7 +9,7 @@
 import Foundation
 import Combine
 import FirebaseFirestore
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 
 /// Observable like state used by both InstantSearchScreen and ListingDetailView
 public final class LikeState: ObservableObject {

@@ -8,7 +8,7 @@
 
 import Foundation
 import FirebaseAuth
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 
 struct CheckoutPayload {
     let amountCents: Int

@@ -591,7 +591,7 @@ private struct GridThumbCard: View {
                     }
                 }
             }
-            .onChange(of: coordinator.path.count) { newCount in
+            .onChange(of: coordinator.path.count) { _, newCount in
                 lastNavPathCount = newCount
             }
             // Accept programmatic search requests from Home (push-to-Shop)
@@ -637,7 +637,7 @@ private struct GridThumbCard: View {
                 print("[IS][onAppear] initiating fresh search for default feed")
                 #endif
             }
-            .onChange(of: coordinator.hitsController.hits.compactMap { $0 }.count) { _ in
+            .onChange(of: coordinator.hitsController.hits.compactMap { $0 }.count) { _, _ in
                 debugLogPulledHits(context: "onChange")
             }
             .safeAreaInset(edge: .bottom) {

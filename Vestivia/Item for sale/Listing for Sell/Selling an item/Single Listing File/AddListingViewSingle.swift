@@ -158,7 +158,7 @@ struct AddListingViewSingle: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(viewModel.description.count > 1000 ? Color.red : Color.clear, lineWidth: 1)
                         )
-                        .onChange(of: viewModel.description) { newValue in
+                        .onChange(of: viewModel.description) { _, newValue in
                             // Limit input to prevent excessive typing
                             if newValue.count > 1100 {
                                 viewModel.description = String(newValue.prefix(1100))
@@ -369,7 +369,7 @@ struct AddListingViewSingle: View {
                 .onTapGesture { endEditing() }
             }
             // Keep this on the ScrollViewReader so we can react to focus changes
-            .onChange(of: priceFieldFocused) { focused in
+            .onChange(of: priceFieldFocused) { _, focused in
                 if focused {
                     withAnimation {
                         proxy.scrollTo("priceField", anchor: .center)
@@ -419,12 +419,12 @@ struct AddListingViewSingle: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
         }
-        .onChange(of: fields.selectedCategory) { _ in
+        .onChange(of: fields.selectedCategory) { _, _ in
             if !currentSizeOptions.contains(fields.selectedSize) {
                 fields.selectedSize = ""
             }
         }
-        .onChange(of: fields.selectedSubcategory) { _ in
+        .onChange(of: fields.selectedSubcategory) { _, _ in
             if !currentSizeOptions.contains(fields.selectedSize) {
                 fields.selectedSize = ""
             }

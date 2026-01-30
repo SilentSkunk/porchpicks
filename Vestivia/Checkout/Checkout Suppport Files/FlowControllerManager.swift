@@ -13,7 +13,7 @@
 import Foundation
 import Stripe
 import StripePaymentSheet
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 import UIKit
 
 @MainActor

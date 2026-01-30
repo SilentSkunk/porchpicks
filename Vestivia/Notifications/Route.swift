@@ -71,12 +71,5 @@ func notificationsListingDetailLoader() -> ListingDetailLoader {
    // push/present `view` as needed
 */
 public func makeListingDetailAnyView(listingId: String) -> AnyView {
-    let props = ListingDetailProps(
-        listingId: listingId,     // <- now valid
-        title: "",
-        brand: "",
-        price: "",
-        heroURL: nil
-    )
     return AnyView(ListingDetailContainer(listingId: listingId))
 }

@@ -188,7 +188,7 @@ final class AuthManager: ObservableObject {
     func captureAndSaveCurrentFCMToken() {
         Messaging.messaging().token { [weak self] token, error in
             guard let self = self else { return }
-            if let error = error {
+            if error != nil {
                 #if DEBUG
                 print("[AuthManager] Error fetching FCM token")
                 #endif
@@ -224,7 +224,7 @@ final class AuthManager: ObservableObject {
         var remainingLength = length
 
         while remainingLength > 0 {
-            var randoms: [UInt8] = (0 ..< 16).map { _ in
+            let randoms: [UInt8] = (0 ..< 16).map { _ in
                 var rng = SystemRandomNumberGenerator()
                 return UInt8.random(in: 0...255, using: &rng)
             }

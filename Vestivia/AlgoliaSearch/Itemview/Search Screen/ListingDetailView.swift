@@ -601,7 +601,7 @@ private struct BottomBar: View {
 
 import AlgoliaSearchClient
 #if canImport(FirebaseFunctions)
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 #endif
 
 /// Use this container when you only have a `listingId`. It will:

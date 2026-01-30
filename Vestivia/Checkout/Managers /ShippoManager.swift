@@ -14,7 +14,7 @@
 //
 
 import Foundation
-import FirebaseFunctions
+@preconcurrency import FirebaseFunctions
 
 /// Matches Poshmark-style USPS Priority Mail Flat Rate shipping
 /// Flat $7.97 up to 5 lbs, 1–3 day delivery

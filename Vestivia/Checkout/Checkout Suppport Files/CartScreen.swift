@@ -342,7 +342,10 @@ struct CartScreen: View {
         }
         .onAppear {
             vm.loadCartOnAppear(incoming: incomingItem)
-            Task { await vm.loadSavedAddress() }
+            Task {
+                await vm.loadSavedAddress()
+                await vm.refreshSavedCardFromBackend()
+            }
         }
     }
 }

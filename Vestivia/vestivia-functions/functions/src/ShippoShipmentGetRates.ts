@@ -114,7 +114,7 @@ export const ShippoShipmentGetRates = onCall(
       }
 
       const listingData = listingDoc.data();
-      const sellerId = listingData?.userId;
+      const sellerId = listingData?.["userId"] as string | undefined;
       if (!sellerId) {
         throw new HttpsError("internal", "Listing has no seller");
       }
@@ -130,21 +130,23 @@ export const ShippoShipmentGetRates = onCall(
       }
 
       const sellerData = sellerDoc.data();
-      const addr = sellerData?.shippingAddress || sellerData?.address;
+      const addr = (sellerData?.["shippingAddress"] || sellerData?.["address"]) as AddressIn | undefined;
 
       if (!addr || !addr.address || !addr.city || !addr.state || !addr.zip) {
         throw new HttpsError("failed-precondition", "Seller has no shipping address configured");
       }
 
       sellerAddress = {
-        fullName: addr.fullName || sellerData?.displayName || sellerData?.username || "",
+        fullName: addr.fullName || (sellerData?.["displayName"] as string) || (sellerData?.["username"] as string) || "",
         address: addr.address,
         city: addr.city,
         state: addr.state,
         zip: addr.zip,
         country: addr.country || "US",
-        phone: addr.phone,
       };
+      if (addr.phone) {
+        sellerAddress.phone = addr.phone;
+      }
     } else {
       throw new HttpsError("invalid-argument", "Missing 'from' address or 'listingId'");
     }

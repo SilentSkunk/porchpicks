@@ -1,0 +1,39 @@
+{
+  "name": "functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "lint": "eslint --ext .js,.ts ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.876.0",
+    "@aws-sdk/s3-request-presigner": "^3.876.0",
+    "algoliasearch": "^4.24.0",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^4.9.0",
+    "imghash": "^1.1.0",
+    "jimp": "^1.6.0",
+    "stripe": "^20.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.24",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.9.3"
+  }
+}

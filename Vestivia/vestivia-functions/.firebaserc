@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "vest-9495e",
+    "prod": "vest-9495e"
+  },
+  "targets": {},
+  "etags": {}
+}

@@ -40,8 +40,25 @@ extension ListingStatus {
 
 class ListingSubmission {
     static let shared = ListingSubmission()
-    
+
     private init() {}
+
+    // MARK: - Input Sanitization (inline to avoid cross-target dependency)
+    private static let dangerousCharacters = CharacterSet(charactersIn: "<>\"'`\\")
+
+    private static func sanitize(_ input: String, maxLength: Int = 1000) -> String {
+        var sanitized = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        sanitized = String(sanitized.unicodeScalars.filter { !dangerousCharacters.contains($0) })
+        if sanitized.count > maxLength {
+            sanitized = String(sanitized.prefix(maxLength))
+        }
+        return sanitized
+    }
+
+    private static func sanitizeTitle(_ input: String) -> String {
+        let singleLine = input.replacingOccurrences(of: "\n", with: " ")
+        return sanitize(singleLine, maxLength: 200)
+    }
 
     /// Converts a brand into a safe, lowercase folder name (e.g., "Burt's Bees" -> "burts-bees").
     private static func slugifyBrand(_ brand: String) -> String {
@@ -149,6 +166,8 @@ class ListingSubmission {
             // If all retries failed for this image, abort the submission
             if !uploadSuccess {
                 let errorMessage = "Failed to upload image \(index + 1) after \(maxRetries) attempts. Please check your connection and try again."
+                // Capture error description before async context to avoid Swift 6 concurrency warning
+                let underlyingErrorDesc = lastError?.localizedDescription ?? "Unknown error"
                 #if DEBUG
                 print("[ListingSubmission] \(errorMessage)")
                 #endif
@@ -160,7 +179,7 @@ class ListingSubmission {
                         userInfo: [
                             "error": errorMessage,
                             "failedIndex": index,
-                            "underlyingError": lastError?.localizedDescription ?? "Unknown error"
+                            "underlyingError": underlyingErrorDesc
                         ]
                     )
                 }
@@ -188,10 +207,10 @@ class ListingSubmission {
         // 2️⃣ Create JSON representation
         let listingID = UUID().uuidString
         // Sanitize user inputs before saving to Firestore
-        let sanitizedDescription = AppConstants.InputSanitization.sanitize(listing.description)
-        let sanitizedBrand = AppConstants.InputSanitization.sanitizeTitle(listing.brand)
-        let sanitizedCategory = AppConstants.InputSanitization.sanitizeTitle(listing.category)
-        let sanitizedSubcategory = AppConstants.InputSanitization.sanitizeTitle(listing.subcategory)
+        let sanitizedDescription = Self.sanitize(listing.description)
+        let sanitizedBrand = Self.sanitizeTitle(listing.brand)
+        let sanitizedCategory = Self.sanitizeTitle(listing.category)
+        let sanitizedSubcategory = Self.sanitizeTitle(listing.subcategory)
 
         let jsonListing: [String: Any] = [
             "category": sanitizedCategory,

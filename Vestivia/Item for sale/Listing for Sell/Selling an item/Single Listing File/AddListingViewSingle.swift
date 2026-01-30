@@ -187,7 +187,7 @@ struct AddListingViewSingle: View {
                         .cornerRadius(8)
                     }
                     .sheet(isPresented: $isShowingSizePicker) {
-                        SelectionSheet(
+                        ListingSelectionSheet(
                             title: "Size",
                             options: currentSizeOptions,
                             selection: $fields.selectedSize
@@ -211,7 +211,7 @@ struct AddListingViewSingle: View {
                         .cornerRadius(8)
                     }
                     .sheet(isPresented: $isShowingConditionPicker) {
-                        SelectionSheet(
+                        ListingSelectionSheet(
                             title: "Condition",
                             options: fields.conditions,
                             selection: $fields.selectedCondition
@@ -235,7 +235,7 @@ struct AddListingViewSingle: View {
                         .cornerRadius(8)
                     }
                     .sheet(isPresented: $isShowingGenderPicker) {
-                        SelectionSheet(
+                        ListingSelectionSheet(
                             title: "Gender",
                             options: fields.genders,
                             selection: $fields.selectedGender
@@ -274,7 +274,7 @@ struct AddListingViewSingle: View {
                         .cornerRadius(8)
                     }
                     .sheet(isPresented: $isShowingColorPicker) {
-                        ColorSelectionSheet(
+                        ColorListingSelectionSheet(
                             title: "Color",
                             options: fields.colorOptions,
                             selections: $fields.selectedColors

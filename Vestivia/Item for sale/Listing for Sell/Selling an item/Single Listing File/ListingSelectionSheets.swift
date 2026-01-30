@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: - Single Selection Sheet
-struct SelectionSheet: View {
+struct ListingSelectionSheet: View {
     let title: String
     let options: [String]
     @Binding var selection: String

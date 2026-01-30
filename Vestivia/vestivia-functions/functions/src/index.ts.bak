@@ -1,0 +1,119 @@
+// functions/src/index.ts
+// Firebase Functions (Gen-2) — Cloudflare Access proxy + Algolia admin
+// ---------------------------------------------------------------
+// Prereqs (from your project root):
+//   firebase functions:secrets:set CF_ACCESS_CLIENT_ID
+//   firebase functions:secrets:set CF_ACCESS_CLIENT_SECRET
+//   firebase functions:secrets:set ALGOLIA_APP_ID
+//   firebase functions:secrets:set ALGOLIA_ADMIN_API_KEY
+//
+// Then install deps:
+//   cd functions && npm i algoliasearch && cd ..
+//
+// Replace the API URLs below with your real Cloudflare-protected endpoints.
+
+import { onCall } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
+import algoliasearch from "algoliasearch";
+
+// ---- Secrets (kept in Google Secret Manager via `functions:secrets:set`)
+const CF_ID = defineSecret(b8a75239a23c27fe1302eb58e2a8973f.access);
+const CF_SECRET = defineSecret(670fdd24641ed6aa7aad92f3159fb0ffe8ffb1867f6bff82cda3782eefd45d3f);
+
+const ALGOLIA_APP_ID = defineSecret(8QZ3HSXCBA);
+const ALGOLIA_ADMIN_API_KEY = defineSecret(9d36600eb138b3b019083b805cd1c185);
+
+// ---- Helpers
+
+async function forwardJson(
+  url: string,
+  body: unknown,
+  cfId: string,
+  cfSecret: string
+) {
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "CF-Access-Client-Id": cfId,
+      "CF-Access-Client-Secret": cfSecret,
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`UPSTREAM_ERROR ${resp.status}: ${text}`);
+  }
+  return resp.json();
+}
+
+function requireAuth(uid?: string) {
+  if (!uid) {
+    throw new Error("UNAUTHENTICATED");
+  }
+}
+
+// ---- Cloudflare Access–protected proxies
+
+// 1) Pattern search: forwards to your /api/search
+export const searchProxy = onCall(
+  { region: "us-central1", secrets: [CF_ID, CF_SECRET] },
+  async (req) => {
+    requireAuth(req.auth?.uid);
+
+    const { imageId, brand, size } = req.data || {};
+    if (!imageId || !brand || !size) {
+      throw new Error("INVALID_ARGUMENT: imageId, brand, size required");
+    }
+
+    return await forwardJson(
+      "https://api.yourdomain.com/api/search", // 🔴 replace
+      { imageId, filters: { brand, size } },
+      CF_ID.value(),
+      CF_SECRET.value()
+    );
+  }
+);
+
+// 2) Cloudflare Images: get a one-time direct upload URL
+export const directUploadProxy = onCall(
+  { region: "us-central1", secrets: [CF_ID, CF_SECRET] },
+  async (req) => {
+    requireAuth(req.auth?.uid);
+    return await forwardJson(
+      https://api.cloudflare.com/client/v4/accounts/9dc42cd7325b80b9e7a8ffdd8bf8e9c7/images/v2/direct_upload, // 🔴 replace
+      {},
+      CF_ID.value(),
+      CF_SECRET.value()
+    );
+  }
+);
+
+// ---- Algolia Admin (server-side only)
+
+// Generate secured Algolia search key
+export const getSecuredSearchKey = onCall(
+  { region: "us-central1", secrets: [ALGOLIA_APP_ID, ALGOLIA_ADMIN_API_KEY] },
+  async (req) => {
+    if (!req.auth?.uid) throw new Error("UNAUTHENTICATED");
+
+    const client = algoliasearch(
+      ALGOLIA_APP_ID.value(),
+      ALGOLIA_ADMIN_API_KEY.value()
+    );
+
+    const restrictions = {
+      restrictIndices: "listings",
+      userToken: req.auth.uid,
+      validUntil: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+    };
+
+    const key = client.generateSecuredApiKey(
+      ALGOLIA_ADMIN_API_KEY.value(),
+      restrictions
+    );
+
+    return { key, appId: ALGOLIA_APP_ID.value() };
+  }
+);

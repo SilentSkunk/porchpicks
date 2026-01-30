@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "listings",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "brandLower", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "patternSearches",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "brandLower", "order": "ASCENDING" },
+        { "fieldPath": "isActive",   "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "matchInbox",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "seen",       "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

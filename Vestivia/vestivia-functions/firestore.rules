@@ -1,0 +1,229 @@
+// ---------- Firestore Security Rules ----------
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------
+    // Username reservations
+    // ------------------------------------
+    match /usernames/{uname} {
+      allow get, list: if true;
+
+      // Create only if not taken and reserving for self
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['uid'])
+                    && request.resource.data.uid == request.auth.uid
+                    && !exists(/databases/$(database)/documents/usernames/$(uname));
+
+      // Only owner can delete (for renames)
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+
+      allow update: if false; // no updates; delete+create instead
+    }
+
+    // ------------------------------------
+    // User profiles
+    // ------------------------------------
+    match /users/{uid} {
+      allow read: if true;
+
+      // Owner can create/update their own profile (+ username reservation guard)
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid
+                            && (
+                              // usernameLower not being changed
+                              !request.resource.data.keys().hasAny(['usernameLower'])
+                              // or keeping the same usernameLower
+                              || request.resource.data.usernameLower == resource.data.usernameLower
+                              // or changing it with a valid reservation created in this same request
+                              || (
+                                existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.usernameLower))
+                                && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.usernameLower)).data.uid == uid
+                              )
+                            );
+
+      // ------------------------------------
+      // Listings nested under each user
+      // users/{uid}/listings/{listingId}
+      // ------------------------------------
+      match /listings/{listingId} {
+        // Public read (adjust later if needed)
+        allow read: if true;
+
+        // Owner can create/delete their own listings
+        allow create, delete: if request.auth != null
+                              && request.auth.uid == uid;
+
+        // Owner can update, EXCEPT cannot touch likeCount
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && !(request.resource.data.keys().hasAny(['likeCount']));
+
+        // Per-listing likes mirror for count/audit
+        match /likes/{likerId} {
+          allow read: if true;
+          allow create, delete: if request.auth != null
+                                && request.auth.uid == likerId;
+          allow update: if false;
+        }
+      }
+
+      // ------------------------------------
+      // Likes — per-user (My Likes screen)
+      // users/{uid}/likes/{listingId}
+      // ------------------------------------
+      match /likes/{listingId} {
+        allow read:   if request.auth != null && request.auth.uid == uid;
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && request.resource.id == listingId;
+        allow delete: if request.auth != null && request.auth.uid == uid;
+        allow update: if false;
+      }
+
+      // ------------------------------------
+      // Pattern searches a user set up (used by matching functions)
+      // users/{uid}/patternSearches/{searchId}
+      // ------------------------------------
+      match /patternSearches/{searchId} {
+        // Owner can see their own searches
+        allow read: if request.auth != null && request.auth.uid == uid;
+
+        // Owner can create/update their own search docs
+        // Allowed fields are limited for safety
+        allow create, update: if request.auth != null
+                              && request.auth.uid == uid
+                              && validPatternSearchWrite();
+
+        // Owner can delete their own search
+        allow delete: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // ------------------------------------
+      // Match inbox – where server drops matches for the buyer
+      // users/{uid}/matchInbox/{listingId}
+      // ------------------------------------
+      match /matchInbox/{listingId} {
+        // Owner can read their inbox
+        allow read: if request.auth != null && request.auth.uid == uid;
+
+        // Client may ONLY toggle 'seen' -> true; everything else server-only
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && isSeenToggleOnly();
+
+        // Creation/deletion come from server (server SDK bypasses rules).
+        // Block direct client creates/deletes.
+        allow create, delete: if false;
+      }
+    }
+
+    // ------------------------------------
+    // Conversations visible only to members
+    // ------------------------------------
+    match /conversations/{cid} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.members;
+
+      allow create: if request.auth != null
+                    && request.resource.data.members is list
+                    && request.auth.uid in request.resource.data.members;
+
+      allow update, delete: if request.auth != null
+                            && request.auth.uid in resource.data.members;
+    }
+
+    // Messages inside a conversation
+    match /conversations/{cid}/messages/{mid} {
+      allow read, create: if request.auth != null
+                          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(cid)).data.members;
+      allow update, delete: if false; // usually immutable
+    }
+
+    // ------------------------------------
+    // ACTIVE SEARCHES (legacy path kept for back-compat)
+    // Path: active_searches/{uid}/items/{searchId}
+    // ------------------------------------
+    match /active_searches/{uid} {
+      match /items/{searchId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null
+                              && request.auth.uid == uid
+                              && validActiveSearchWrite();
+        allow delete: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // ------------------------------------
+    // App state / versioning (read-only from client)
+    // Client probes this to detect new listings
+    // Path: app_state/listings { listingsVersion: <int> }
+    // ------------------------------------
+    match /app_state/{docId} {
+      allow read: if request.auth != null && docId == "listings";
+      allow write: if false; // server-only
+    }
+
+    // ------------------------------------
+    // Server-written audit collections (no direct client read)
+    // ------------------------------------
+    match /matches_by_listing/{listingId}/{coll=**} {
+      allow read, write: if false;
+    }
+    match /matches_by_search/{searchKey}/{coll=**} {
+      allow read, write: if false;
+    }
+
+    // --------------- HELPERS ---------------
+    function validActiveSearchWrite() {
+      let allowed = [
+        'brandLower',
+        'size',
+        'storagePathPrimary',
+        'storagePathUser',
+        'createdAt'
+      ];
+
+      return request.resource.data.keys().hasOnly(allowed)
+        && (
+          (resource == null && ('createdAt' in request.resource.data))
+          ||
+          (resource != null
+            && (!('createdAt' in request.resource.data)
+                || request.resource.data.createdAt == resource.data.createdAt))
+        );
+    }
+
+    function validPatternSearchWrite() {
+      // Allow client-side creation/toggling of searches, but keep fields tight.
+      // Server may also write additional fields (bypass rules).
+      let allowed = [
+        'brandLower',     // string, lowercase brand
+        'imagePath',      // storage path of buyer pattern
+        'phash',          // optional – server will set
+        'isActive',       // bool
+        'createdAt',      // server timestamp on create
+        'updatedAt'       // server timestamp on update
+      ];
+
+      // Only allow these fields from client
+      let keysOk = request.resource.data.keys().hasOnly(allowed);
+
+      // Prevent client from changing createdAt after creation
+      let createdAtOk = (resource == null && ('createdAt' in request.resource.data))
+                        || (resource != null
+                            && (!('createdAt' in request.resource.data)
+                                || request.resource.data.createdAt == resource.data.createdAt));
+
+      return keysOk && createdAtOk;
+    }
+
+    // Only allow changing { seen: true } on matchInbox docs
+    function isSeenToggleOnly() {
+      // Only 'seen' may be written, and only from false -> true or set to true
+      let newKeys = request.resource.data.diff(resource.data).affectedKeys();
+      return newKeys.hasOnly(['seen'])
+             && request.resource.data.seen == true;
+    }
+  }
+}

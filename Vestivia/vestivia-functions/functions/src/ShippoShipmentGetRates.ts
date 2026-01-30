@@ -71,6 +71,7 @@ type ParcelIn = {
 export const ShippoShipmentGetRates = onCall(
   { region: "us-central1", secrets: [SHIPPO_TEST_KEY] },
   async (req) => {
+    try {
     const uid = req.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in required");
 
@@ -283,5 +284,14 @@ export const ShippoShipmentGetRates = onCall(
         carrier: r.carrier,        // "USPS"
       })),
     };
+    } catch (err: any) {
+      // Re-throw HttpsErrors as-is, wrap others with details
+      if (err instanceof HttpsError) {
+        console.error(`[Shippo] HttpsError: ${err.code} - ${err.message}`);
+        throw err;
+      }
+      console.error(`[Shippo] Unexpected error:`, err);
+      throw new HttpsError("internal", `Unexpected error: ${err?.message || String(err)}`);
+    }
   }
 );

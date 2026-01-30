@@ -933,9 +933,9 @@ public struct ListingDetailContainer: View {
             )
             let mapped = ListingDetailProps(
                 listingId: listingId,
-                title: hit.title ?? "",
+                title: hit.title,
                 brand: hit.brand ?? "",
-                price: hit.priceString ?? "",
+                price: hit.priceString,
                 heroURL: hero,
                 seller: sellerSummary,
                 onToggleFollow: nil,
@@ -947,7 +947,7 @@ public struct ListingDetailContainer: View {
 
             // Persist hero if it came from cache and we can infer an expiry (optional)
             if let id = imageId, let cached = getCachedHeroURL(imageId: id, variant: .card),
-               let exp = (try? URLComponents(url: cached, resolvingAgainstBaseURL: false))?.queryItems?.first(where: { $0.name == "exp" })?.value.flatMap(Int.init) {
+               let exp = URLComponents(url: cached, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "exp" })?.value.flatMap(Int.init) {
                 DiskListingCache.saveHero(url: cached, exp: exp, for: listingId)
             }
 

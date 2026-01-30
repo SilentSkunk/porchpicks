@@ -63,7 +63,7 @@ final class FollowService {
                 .collection("listings")
                 .whereField("sold", isEqualTo: false)
             let agg = try await q.count.getAggregation(source: .server)
-            return Int(agg.count)
+            return Int(truncating: agg.count)
         } catch {
             return 0
         }

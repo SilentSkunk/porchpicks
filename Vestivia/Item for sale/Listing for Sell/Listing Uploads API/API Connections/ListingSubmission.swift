@@ -177,17 +177,23 @@ class ListingSubmission {
 
         // 2️⃣ Create JSON representation
         let listingID = UUID().uuidString
+        // Sanitize user inputs before saving to Firestore
+        let sanitizedDescription = AppConstants.InputSanitization.sanitize(listing.description)
+        let sanitizedBrand = AppConstants.InputSanitization.sanitizeTitle(listing.brand)
+        let sanitizedCategory = AppConstants.InputSanitization.sanitizeTitle(listing.category)
+        let sanitizedSubcategory = AppConstants.InputSanitization.sanitizeTitle(listing.subcategory)
+
         let jsonListing: [String: Any] = [
-            "category": listing.category,
-            "subcategory": listing.subcategory,
+            "category": sanitizedCategory,
+            "subcategory": sanitizedSubcategory,
             "size": listing.size,
             "condition": listing.condition,
             "gender": listing.gender,
-            "description": listing.description,
+            "description": sanitizedDescription,
             "color": listing.color,
             "originalPrice": listing.originalPrice,
             "listingPrice": listing.listingPrice,
-            "brand": listing.brand,
+            "brand": sanitizedBrand,
             "imageIds": uploadedImageIds,
             // status fields
             "listingID": listingID,

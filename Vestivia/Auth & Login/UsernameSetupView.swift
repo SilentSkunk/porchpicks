@@ -167,7 +167,9 @@ struct UsernameSetupView: View {
                 status = (doc.exists ? .taken : .available)
             }
         } catch {
+            #if DEBUG
             print("[UsernameSetup] availability error:", error.localizedDescription)
+            #endif
             await MainActor.run { status = .idle; errorMessage = error.localizedDescription }
         }
     }
@@ -182,14 +184,18 @@ struct UsernameSetupView: View {
         errorMessage = nil
         do {
             try await claimUsernameBatch(username: trimmed, uid: uid)
-            print("[UsernameSetup] ✅ batch committed, username set, moving to photo step")
+            #if DEBUG
+            print("[UsernameSetup] batch committed, username set, moving to photo step")
+            #endif
             await MainActor.run {
                 isSubmitting = false
                 showPhotoSetup = true
             }
         } catch {
             let ns = error as NSError
-            print("[UsernameSetup] ❌ batch failed code=\(ns.code) domain=\(ns.domain) msg=\(ns.localizedDescription)")
+            #if DEBUG
+            print("[UsernameSetup] batch failed code=\(ns.code) domain=\(ns.domain) msg=\(ns.localizedDescription)")
+            #endif
             await MainActor.run {
                 isSubmitting = false
                 errorMessage = ns.localizedDescription
@@ -208,16 +214,20 @@ struct UsernameSetupView: View {
         let unameRef = db.collection("usernames").document(lower)
         let userRef  = db.collection("users").document(uid)
         
+        #if DEBUG
         print("[UsernameSetup] begin claim: \(username) (\(lower)) for uid \(uid)")
-        
+        #endif
+
         // Read current user once to know if we must release previous reservation
         let userSnap = try await userRef.getDocument()
         let oldLower = (userSnap.get("usernameLower") as? String)?.lowercased()
+        #if DEBUG
         if let oldLower, !oldLower.isEmpty {
             print("[UsernameSetup] existing usernameLower=\(oldLower) -> will release if changed")
         } else {
             print("[UsernameSetup] no existing usernameLower on profile")
         }
+        #endif
         
         // Build batch
         let batch = db.batch()
@@ -236,19 +246,23 @@ struct UsernameSetupView: View {
         if let old = oldLower, !old.isEmpty, old != lower {
             let oldRef = db.collection("usernames").document(old)
             batch.deleteDocument(oldRef)
+            #if DEBUG
             print("[UsernameSetup] will delete old reservation \(old)")
+            #endif
         }
         
         // Commit
         do {
             try await batch.commit()
         } catch {
+            #if DEBUG
             let ns = error as NSError
             // Common permission messages you might see:
             // - "Missing or insufficient permissions."
             // - "PERMISSION_DENIED: ..." (when rules reject)
             // - "ALREADY_EXISTS" if someone nabbed the handle between check & write
             print("[UsernameSetup] commit error code=\(ns.code) domain=\(ns.domain) msg=\(ns.localizedDescription)")
+            #endif
             throw error
         }
     }

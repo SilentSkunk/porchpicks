@@ -218,6 +218,7 @@ struct InstantSearchScreen: View {
 
     /// DEBUG: Dump a concise summary of what was pulled from Algolia
     private func debugLogPulledHits(context: String = "results") {
+        #if DEBUG
         let pulled = coordinator.hitsController.hits.compactMap { $0 }
         print("[IS][\(context)] pulled \(pulled.count) hits")
         for (idx, h) in pulled.prefix(50).enumerated() {
@@ -232,6 +233,7 @@ struct InstantSearchScreen: View {
         if pulled.count > 50 {
             print("[IS][\(context)] …truncated \(pulled.count - 50) additional hits")
         }
+        #endif
     }
     // Extracts the owner uid from a Firestore path like:
     // users/{uid}/user_listings/{uid}/listings/{listingId}
@@ -368,7 +370,9 @@ struct InstantSearchScreen: View {
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                #if DEBUG
                                 print("[IS][recently-viewed] tapped id=\(hit.listingID)")
+                                #endif
                                 recordViewed(hit.listingID)
                                 coordinator.openListing(from: hit)
                             }
@@ -399,7 +403,9 @@ struct InstantSearchScreen: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    #if DEBUG
                     print("[IS][grid] tapped id=\(hit.listingID)")
+                    #endif
                     recordViewed(hit.listingID)
                     coordinator.openListing(from: hit)
                 }
@@ -626,7 +632,9 @@ private struct GridThumbCard: View {
                         coordinator.search()
                     }
                 }
+                #if DEBUG
                 print("[IS][onAppear] initiating fresh search for default feed")
+                #endif
             }
             .onChange(of: coordinator.hitsController.hits.compactMap { $0 }.count) { _ in
                 debugLogPulledHits(context: "onChange")

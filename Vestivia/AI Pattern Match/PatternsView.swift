@@ -135,10 +135,17 @@ struct PatternsView: View {
                 }
 
                 if let err = vm.error, !err.isEmpty {
-                    HStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
-                        Text(err).font(.footnote).foregroundStyle(.secondary)
-                        Spacer()
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                            Text(err).font(.footnote).foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        Button("Retry") {
+                            vm.refresh()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.footnote)
                     }
                 }
             }

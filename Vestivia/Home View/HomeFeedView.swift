@@ -63,15 +63,18 @@ var makeMessagesDestination: () -> AnyView = { AnyView(MessagesHomeView()) }
                     makeMessagesDestination()
                 case .profile:
                     ConnectedProfileView()
-                        .onAppear { print("[HomeFeedView] presenting ConnectedProfileView()") }
                         .eraseToAnyView()
                 }
             }
             .onChange(of: path) { _, newPath in
+                #if DEBUG
                 print("[HomeFeedView] path:", newPath)
+                #endif
             }
             .task {
+                #if DEBUG
                 print("[HomeFeedView] NewestItemsVM initial load")
+                #endif
                 newestVM.load(limit: 12, forceRefresh: true)
             }
         }
@@ -193,10 +196,12 @@ var makeMessagesDestination: () -> AnyView = { AnyView(MessagesHomeView()) }
         @Binding var searchText: String
         var onSubmit: () -> Void
         @Binding var showSideMenu: Bool
-        
+
         var body: some View {
             HStack {
                 Image(systemName: "line.horizontal.3")
+                    .accessibilityLabel("Menu")
+                    .accessibilityHint("Opens the navigation menu")
                     .onTapGesture {
                         withAnimation {
                             showSideMenu.toggle()
@@ -211,7 +216,11 @@ var makeMessagesDestination: () -> AnyView = { AnyView(MessagesHomeView()) }
                     }
                 Spacer()
                 Image(systemName: "bell")
+                    .accessibilityLabel("Notifications")
+                    .accessibilityHint("View your notifications")
                 Image(systemName: "cart")
+                    .accessibilityLabel("Cart")
+                    .accessibilityHint("View your shopping cart")
             }
             .padding(.horizontal, 16)
         }
@@ -336,7 +345,9 @@ var makeMessagesDestination: () -> AnyView = { AnyView(MessagesHomeView()) }
                     .padding(.leading, 24)
                 }
                 Button(action: {
+                    #if DEBUG
                     print("Profile tapped")
+                    #endif
                     withAnimation {
                         showSideMenu = false
                     }
@@ -398,7 +409,9 @@ final class NewestItemsVM: ObservableObject {
     // Public entrypoint
     @MainActor
     func load(limit: Int = 10, forceRefresh: Bool = false) {
+        #if DEBUG
         print("[NewestItemsVM] load(limit: \(limit), forceRefresh: \(forceRefresh))")
+        #endif
 
         // 1) Try cache first for instant paint
         if let cached = readCache() {

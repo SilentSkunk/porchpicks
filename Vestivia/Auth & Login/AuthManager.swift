@@ -164,7 +164,9 @@ final class AuthManager: ObservableObject {
     /// Persist the provided FCM token under users/{uid}/fcmTokens for multi-device support.
     func updateFCMTokenWith(_ token: String) {
         guard let uid = Auth.auth().currentUser?.uid, !token.isEmpty else {
-            print("⚠️ updateFCMTokenWith called without current user or empty token")
+            #if DEBUG
+            print("[AuthManager] updateFCMTokenWith called without current user or empty token")
+            #endif
             return
         }
         let fieldPath = "fcmTokens.\(token)"
@@ -172,11 +174,13 @@ final class AuthManager: ObservableObject {
             fieldPath: FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ], merge: true) { err in
+            #if DEBUG
             if let err = err {
-                print("❌ Failed to save FCM token: \(err)")
+                print("[AuthManager] Failed to save FCM token: \(err)")
             } else {
-                print("✅ Saved FCM token for user \(uid)")
+                print("[AuthManager] Saved FCM token")
             }
+            #endif
         }
     }
 
@@ -185,11 +189,15 @@ final class AuthManager: ObservableObject {
         Messaging.messaging().token { [weak self] token, error in
             guard let self = self else { return }
             if let error = error {
-                print("❌ Error fetching FCM token: \(error)")
+                #if DEBUG
+                print("[AuthManager] Error fetching FCM token")
+                #endif
                 return
             }
             guard let token = token, !token.isEmpty else {
-                print("⚠️ No FCM token available yet")
+                #if DEBUG
+                print("[AuthManager] No FCM token available yet")
+                #endif
                 return
             }
             self.updateFCMTokenWith(token)
@@ -261,7 +269,6 @@ final class AuthManager: ObservableObject {
             rawNonce: nonce,
             fullName: appleIDCredential.fullName
         )
-        print("🍎 [AppleLogin] Using nonce:", nonce)
 
         Auth.auth().signIn(with: credential) { authResult, error in
             if let error = error {
@@ -286,7 +293,6 @@ final class AuthManager: ObservableObject {
     func beginAppleSignInRequest(_ request: ASAuthorizationAppleIDRequest) {
         let nonce = randomNonceString()
         currentNonce = nonce
-        print("🍎 [AppleLogin] Generated nonce:", nonce)
         request.requestedScopes = [.fullName, .email]
         request.nonce = sha256(nonce)
     }

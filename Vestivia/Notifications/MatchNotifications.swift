@@ -77,7 +77,9 @@ final class MatchNotifications: NSObject, ObservableObject {
             .addSnapshotListener { [weak self] snap, err in
                 guard let self else { return }
                 if let err {
-                    print("🔕 [MatchNotifications] snapshot error: \(err)")
+                    #if DEBUG
+                    print("[MatchNotifications] snapshot error: \(err)")
+                    #endif
                     return
                 }
                 guard let snap else { return }
@@ -106,7 +108,9 @@ final class MatchNotifications: NSObject, ObservableObject {
                 }
             }
 
-        print("🔔 [MatchNotifications] listening for \(uid)")
+        #if DEBUG
+        print("[MatchNotifications] listening started")
+        #endif
     }
 
     /// Stop listening (e.g., on sign-out).
@@ -114,7 +118,9 @@ final class MatchNotifications: NSObject, ObservableObject {
         listener?.remove()
         listener = nil
         currentUid = nil
-        print("🔕 [MatchNotifications] stopped listening")
+        #if DEBUG
+        print("[MatchNotifications] stopped listening")
+        #endif
     }
 
     /// Optionally mark a match as seen (call from your listing screen after opening).
@@ -166,7 +172,9 @@ final class MatchNotifications: NSObject, ObservableObject {
         let req = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
 
         UNUserNotificationCenter.current().add(req) { err in
-            if let err { print("🔕 [MatchNotifications] schedule error: \(err)") }
+            #if DEBUG
+            if let err { print("[MatchNotifications] schedule error: \(err)") }
+            #endif
         }
     }
 }

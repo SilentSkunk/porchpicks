@@ -211,8 +211,9 @@ struct LoginView: View {
         }
         .edgesIgnoringSafeArea(.top)
         .onAppear {
-            print("🔥 LoginView appeared — isLoggedIn =", isLoggedIn)
-            print("🔥 Firebase currentUser =", Auth.auth().currentUser?.uid ?? "none")
+            #if DEBUG
+            print("[LoginView] appeared, isLoggedIn =", isLoggedIn)
+            #endif
         }
     }
     
@@ -234,9 +235,8 @@ struct LoginView: View {
             }
         } catch {
             #if DEBUG
-            print("❌ ensureUserDoc error:", error.localizedDescription)
+            print("[LoginView] ensureUserDoc error:", error.localizedDescription)
             #endif
-            print("ensureUserDoc error:", error.localizedDescription)
         }
     }
 }

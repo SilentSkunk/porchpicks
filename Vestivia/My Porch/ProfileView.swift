@@ -20,6 +20,7 @@ struct ProfileView: View {
     // Handlers (hook these up to your flows)
     var onEditProfile: () -> Void = {}
     var onAddPin: () -> Void = {}
+    var onShippingAddress: () -> Void = {}
     var onSettings: () -> Void = {}
     var onInvite: () -> Void = {}
     var onLogout: () -> Void = {}
@@ -48,6 +49,12 @@ struct ProfileView: View {
                         title: "Payment",
                         systemIcon: "creditcard",
                         action: onAddPin
+                    )
+                    Divider().padding(.leading, 56)
+                    ProfileActionRow(
+                        title: "Shipping Address",
+                        systemIcon: "shippingbox",
+                        action: onShippingAddress
                     )
                     Divider().padding(.leading, 56)
                     ProfileActionRow(
@@ -231,6 +238,7 @@ struct ConnectedProfileView: View {
     @StateObject private var vm = ProfileViewModel()
     @AppStorage("isLoggedIn") private var isLoggedIn: Bool = true
     @State private var avatarURL: URL? = nil
+    @State private var showingShippingAddress = false
 
     // You can pass these in from a parent if needed
     var onEditProfile: () -> Void = {}
@@ -247,11 +255,15 @@ struct ConnectedProfileView: View {
             avatarURL: avatarURL,
             onEditProfile: onEditProfile,
             onAddPin: onAddPin,
+            onShippingAddress: { showingShippingAddress = true },
             onSettings: onSettings,
             onInvite: onInvite,
             onLogout: handleLogout,
             onEditAvatar: onEditAvatar
         )
+        .sheet(isPresented: $showingShippingAddress) {
+            SellerShippingAddressView()
+        }
         .onAppear {
             vm.start()
             loadAvatar()

@@ -103,6 +103,58 @@ final class AddressManager: ObservableObject {
     
     
     // ------------------------------------------------------------
+    // MARK: - Seller Shipping Address (stored on user document)
+    // ------------------------------------------------------------
+
+    /// Load seller's shipping address from user document
+    func loadSellerShippingAddress() async throws -> UserAddress? {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw AddressError.notLoggedIn
+        }
+
+        let userDoc = try await db.collection("users").document(uid).getDocument()
+
+        guard let data = userDoc.data(),
+              let addr = data["shippingAddress"] as? [String: Any] else {
+            return nil
+        }
+
+        return UserAddress(
+            id: "shipping",
+            fullName: addr["fullName"] as? String ?? "",
+            address: addr["address"] as? String ?? "",
+            city: addr["city"] as? String ?? "",
+            state: addr["state"] as? String ?? "",
+            zip: addr["zip"] as? String ?? "",
+            country: addr["country"] as? String ?? "US",
+            phone: addr["phone"] as? String ?? "",
+            isPrimary: false
+        )
+    }
+
+    /// Save seller's shipping address to user document
+    func saveSellerShippingAddress(_ address: UserAddress) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw AddressError.notLoggedIn
+        }
+
+        let addressData: [String: Any] = [
+            "fullName": address.fullName,
+            "address": address.address,
+            "city": address.city,
+            "state": address.state,
+            "zip": address.zip,
+            "country": address.country,
+            "phone": address.phone,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        try await db.collection("users").document(uid).setData([
+            "shippingAddress": addressData
+        ], merge: true)
+    }
+
+    // ------------------------------------------------------------
     // MARK: - Error Handling
     // ------------------------------------------------------------
     enum AddressError: Error {
